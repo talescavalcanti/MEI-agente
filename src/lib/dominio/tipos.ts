@@ -26,7 +26,7 @@ export type Mei = {
   chave_pix: string | null;
   /** Data e hora em texto ISO. */
   criado_em: string;
-  /** Dados fiscais (08-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
+  /** Dados fiscais (09-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
   cnpj: string | null;
   inscricao_municipal: string | null;
   /** Município do prestador, para a NFS-e. */
@@ -349,7 +349,7 @@ export type FollowupGerado = {
 };
 
 // ---------------------------------------------------------------------------
-// Nota fiscal assistida e faturamento (08-fiscal.sql)
+// Nota fiscal assistida e faturamento (09-fiscal.sql)
 // ---------------------------------------------------------------------------
 
 /** Retorno de `fiscal_parametros(p_ano)`. O limite muda por ano (LC 238/2026). */
