@@ -12,7 +12,7 @@ O MEI descreve o serviço em uma frase. O agente organiza o resto e só age com 
 <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-1f2328?style=flat-square&logo=nextdotjs&logoColor=white" />
 <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Postgres-1f2328?style=flat-square&logo=supabase&logoColor=white" />
 <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-1f2328?style=flat-square&logo=typescript&logoColor=white" />
-<img alt="Testes" src="https://img.shields.io/badge/testes-381%20passando-1f2328?style=flat-square" />
+<img alt="Testes" src="https://img.shields.io/badge/testes-505%20passando-1f2328?style=flat-square" />
 </p>
 
 <p>
@@ -76,6 +76,7 @@ Um agente com ferramentas, regras de negócio no banco e aprovação humana ante
 | [4. Funcionalidades](#4-funcionalidades) | [9. Segurança, privacidade e LGPD](#9-segurança-privacidade-e-lgpd) | [14. Como rodar](#14-como-rodar) |
 | [5. Arquitetura](#5-arquitetura) | [10. Riscos e gaps](#10-riscos-e-gaps) | [15. O papel do AKCIT Camp](#15-o-papel-do-akcit-camp) |
 | [Business Model Canvas](docs/bmc.md) | [Equipe](#equipe) | [Licença](#licença) |
+| [Fluxo do agente](docs/fluxo-do-agente.md) | | |
 
 <br/>
 
@@ -214,6 +215,7 @@ Agente   O orçamento #009 (Carlos, troca de fiação, R$ 450) está há
 | **Marketing digital** | Sugere posts, legendas, campanhas e estratégias de divulgação adaptadas à atividade do MEI. |
 | **Gestão operacional** | Organiza clientes, serviços e agendamentos; identifica tarefas pendentes. |
 | **Acompanhamento financeiro** | Apoia o registro de valores, pagamentos e cobranças, com ampliação futura. |
+| **Nota fiscal assistida** | Prepara o rascunho da NFS-e de um serviço executado com os dados do cadastro, sem que o modelo escreva valor ou tomador. Confere o CPF ou CNPJ do cliente e mostra avisos que precisam ser conferidos antes de aprovar. O MEI emite no Emissor Nacional e registra a emissão; o sistema compara a nota emitida com o rascunho e marca a divergência. A página Notas mostra o faturamento do ano frente ao limite do MEI. |
 
 <br/>
 
@@ -375,7 +377,7 @@ Foco no ciclo completo de atendimento, usando dados cadastrados e de demonstraç
 |:---|:---|:---|
 | **Nada sai sem o MEI aprovar** | Orçamento, contrato e mensagem nascem como `rascunho` e só viram `aprovado` ou `descartado` por decisão do usuário no cartão. Decisão repetida não muda nada. No MVP não há envio automático: a mensagem é copiada e colada. | `supabase/04-documentos.sql` (`item_decidir`), `src/app/painel/agente/Cartao.tsx` |
 | **Documento aprovado não é refeito** | O banco recusa regerar orçamento ou contrato já aprovado. | `supabase/04-documentos.sql` |
-| **Entrada do modelo validada** | Cada uma das 17 ferramentas tem esquema `zod`; entrada inválida não executa e volta ao modelo como `entrada_invalida`. | `src/lib/agente/ferramentas/executar.ts` |
+| **Entrada do modelo validada** | Cada uma das 20 ferramentas tem esquema `zod`; entrada inválida não executa e volta ao modelo como `entrada_invalida`. | `src/lib/agente/ferramentas/executar.ts` |
 | **Regras de negócio no banco** | A IA interpreta; as funções SQL garantem estados do serviço e evitam cliente duplicado. | `supabase/02..05-*.sql` |
 | **Teto de etapas por pedido** | No máximo 8 voltas do modelo por mensagem do usuário. | `src/lib/agente/loop.ts` (`MAX_VOLTAS`) |
 | **Teto de custo por dia** | Limite diário de tokens por MEI (padrão 400 mil, `AGENTE_LIMITE_DIARIO_TOKENS`). | `src/lib/agente/uso.ts` |
@@ -388,7 +390,7 @@ Foco no ciclo completo de atendimento, usando dados cadastrados e de demonstraç
 
 | Camada | Como | Situação |
 |:---|:---|:---|
-| **Testes automáticos** | 381 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos, a rota do chat, a base de conhecimento e o webhook da Meta, sem gastar crédito. | Passando |
+| **Testes automáticos** | 505 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos, a rota do chat, a base de conhecimento e o webhook da Meta, sem gastar crédito. | Passando |
 | **Aceitação com o modelo real** | `scripts/agente-smoke.ts` roda o cenário da seção 3 contra o modelo. Esperado: 3 cartões, serviço `confirmado` e nenhuma `entrada_invalida`. | Script pronto |
 | **Métricas de produto** | As da seção 11, medidas na fase de validação com MEIs reais. | Fase 2 |
 
@@ -557,7 +559,7 @@ Rota de chat com streaming e acompanhamento de propostas paradas. Documentação
 
 ## Licença
 
-A definir.
+Distribuído sob a licença [MIT](LICENSE).
 
 <br/>
 
