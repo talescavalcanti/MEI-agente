@@ -335,10 +335,11 @@ Comportamento: checa `uso_hoje >= limiteDiario` antes de chamar o modelo (emite 
 
 Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administrativo de MEI, tom direto e cordial, português do Brasil); ao receber um pedido, registrar o que já dá, conferir `listar_dados_faltantes` e perguntar tudo que falta **numa única mensagem**; buscar o cliente antes de criar; datas relativas resolvidas a partir de `hoje` do contexto e passadas como `AAAA-MM-DD`; nunca dizer que enviou algo: ele prepara rascunhos e o usuário decide nos cartões; não repetir no texto o conteúdo completo do que já está no cartão; minuta não é orientação jurídica; guardar com `salvar_memoria` preferências duradouras do negócio.
 
-- [ ] **Step 1:** Testes: `PROMPT_SISTEMA` não contém dígitos de ano nem o padrão `\d{4}-\d{2}-\d{2}`; `blocoContexto` contém a data de hoje, a atividade do MEI e cada memória; duas chamadas de `montarSystem()` são idênticas.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 1:** Testes: `PROMPT_SISTEMA` não contém dígitos de ano nem o padrão `\d{4}-\d{2}-\d{2}`; `blocoContexto` contém a data de hoje, a atividade do MEI e cada memória; duas chamadas de `montarSystem()` são idênticas.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
 - [ ] **Step 5:** `scripts/agente-smoke.ts`: roda as duas falas do README §3 contra a API real e um PGlite, imprime ferramentas chamadas, cartões e uso de tokens. **Gasta crédito: só rodar com o ok do dono.** Expected: 3 cartões, serviço `confirmado`, nenhuma ferramenta com `entrada_invalida`. É também o teste de aceitação do modelo escolhido: se ele não fechar este cenário, trocar `AGENTE_MODELO`.
-- [ ] **Step 6:** Commit `feat: cliente do modelo, prompt e contexto do negocio`.
+- [x] **Step 6:** Commit `feat: cliente do modelo, prompt e contexto do negocio`.
+- **Feito (PRs #11 e #15):** `limitarHistorico` (40 mensagens / 40 mil caracteres, corta sempre numa mensagem do usuário); `criarLlm({ streaming: false })` usa `generateText` como alternativa; todo erro sai em português como `ErroLlm`. Smoke: `JITI_ALIAS='{"@":"./src","server-only":"./tests/helpers/vazio.ts"}' npx jiti scripts/agente-smoke.ts --confirmo [--sem-streaming]`. **Step 5 (smoke real) pendente do ok do dono.** Se o uso vier 0 no smoke, ligar `includeUsage: true`.
 
 ### Task 11: Rota de chat com streaming
 
