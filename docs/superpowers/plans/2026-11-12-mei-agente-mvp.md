@@ -382,6 +382,7 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - [ ] **Step 2–4:** Run (FAIL) → implementar tudo → Run (PASS).
 - [ ] **Step 5:** Verificação manual com o cenário do README §3: as duas falas produzem 3 cartões; aprovar a mensagem libera "Copiar"; clique duplo em Aprovar não duplica nada; F5 mantém conversa e estados.
 - [ ] **Step 6:** Commit `feat: chat do agente com cartoes de aprovacao`.
+- **Parte A feita (PR #14):** `actions.ts`, `cartao-dados.ts`, `Cartao.tsx`, `EditarItem.tsx`, `tests/agente/cartao.test.ts`. As 4 actions devolvem `{ cartao: CartaoDados } | { erro: string }`. `<Cartao cartao={{tipo,id}} inicial?={CartaoDados} />`: sem `inicial`, chama `verItem` sozinho (serve para o stream e para o F5). **Falta a parte B:** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` (Steps 1 e 5).
 
 ### Task 14: Telas de consulta
 
