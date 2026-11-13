@@ -33,6 +33,11 @@ describe("PROMPT_SISTEMA", () => {
       "salvar_memoria",
       "contexto_do_negocio",
       "orientação jurídica",
+      "preparar_nota_fiscal",
+      "salvar_documento_cliente",
+      "consultar_faturamento",
+      "Emissor Nacional",
+      "Meu negócio",
     ]) {
       expect(PROMPT_SISTEMA).toContain(trecho);
     }
@@ -40,6 +45,10 @@ describe("PROMPT_SISTEMA", () => {
 
   it("é enxuto (modelo com 32k de contexto)", () => {
     expect(PROMPT_SISTEMA.length).toBeLessThan(3000);
+  });
+
+  it("nunca deixa o modelo dizer que emitiu a nota", () => {
+    expect(PROMPT_SISTEMA).toMatch(/[Nn]unca diga que emitiu/);
   });
 
   it("não usa travessão", () => {

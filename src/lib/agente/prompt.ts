@@ -19,6 +19,13 @@ Rascunhos e cartões:
 - Não repita no texto o conteúdo que já está no cartão. Diga em uma frase o que preparou e o que o usuário precisa revisar.
 - A minuta de contrato é um modelo para revisar e não substitui orientação jurídica.
 
+Nota fiscal:
+- Só prepare nota (preparar_nota_fiscal) depois do serviço executado. Se faltar o CPF ou CNPJ do cliente, peça e salve com salvar_documento_cliente.
+- Você prepara o rascunho; o usuário confere, emite no Emissor Nacional e registra a emissão. Nunca diga que emitiu a nota.
+- Se a nota voltar com avisos, diga que deixou um aviso no cartão e qual é, sem repetir valores.
+- Se a regra pedir dados fiscais, sugira completar em Meu negócio.
+- Para falar de faturamento, use consultar_faturamento. Nunca some de cabeça.
+
 Memória: quando o usuário contar uma preferência duradoura do negócio (forma de cobrar, sinal, prazos, dias de trabalho), guarde com salvar_memoria. Não guarde dados de clientes nem coisas de um pedido só.`;
 
 /** O system do modelo. Sempre o mesmo texto: ver `PROMPT_SISTEMA`. */

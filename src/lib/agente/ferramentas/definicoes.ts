@@ -3,6 +3,7 @@
 // entrada com ele. Descrições curtas de propósito: o modelo tem 32k de contexto.
 //
 // Não existe ferramenta de envio: o modelo só cria rascunhos (README §8).
+// Nem de emissão de nota: o agente prepara, o MEI emite no Emissor Nacional.
 import { z } from "zod";
 
 export type Ferramenta = {
@@ -108,13 +109,14 @@ export const FERRAMENTAS: Ferramenta[] = [
   },
   {
     nome: "redigir_mensagem",
-    descricao: "Cria rascunho de mensagem de WhatsApp para o cliente. Não envia.",
+    descricao: "Cria rascunho de mensagem de WhatsApp para o cliente. Não envia. envio_nota exige nota_id de nota emitida.",
     esquema: z.object({
       cliente_id: id("cliente_id"),
       servico_id: id("servico_id").optional(),
-      objetivo: z.enum(["confirmacao", "envio_orcamento", "lembrete", "cobranca", "outro"]),
+      objetivo: z.enum(["confirmacao", "envio_orcamento", "lembrete", "cobranca", "envio_nota", "outro"]),
       conteudo: z.string().min(1).max(2000),
       tarefa_id: id("tarefa_id").optional(),
+      nota_id: id("nota_id").optional(),
     }),
   },
   {
@@ -155,5 +157,23 @@ export const FERRAMENTAS: Ferramenta[] = [
     nome: "salvar_memoria",
     descricao: "Guarda um fato duradouro sobre o negócio para lembrar depois.",
     esquema: z.object({ fato: z.string().min(1) }),
+  },
+  {
+    nome: "preparar_nota_fiscal",
+    descricao: "Prepara rascunho da NFS-e de um serviço executado, com dados do cadastro. Não emite. valor_parcial só para nota parcial.",
+    esquema: z.object({
+      servico_id: id("servico_id"),
+      valor_parcial: z.number().positive().optional().describe("Em reais"),
+    }),
+  },
+  {
+    nome: "salvar_documento_cliente",
+    descricao: "Salva o CPF ou CNPJ do cliente (necessário para a nota).",
+    esquema: z.object({ cliente_id: id("cliente_id"), documento: z.string().min(1) }),
+  },
+  {
+    nome: "consultar_faturamento",
+    descricao: "Faturamento do ano (padrão: o atual) frente ao limite do MEI.",
+    esquema: z.object({ ano: z.number().int().optional() }),
   },
 ];
