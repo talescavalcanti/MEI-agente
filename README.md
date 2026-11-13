@@ -209,6 +209,7 @@ Lista **proposta** (nomes e assinaturas podem mudar na implementação):
 | `listar_propostas_pendentes(dias_sem_resposta)` | Acha propostas paradas | não | não |
 | `registrar_pagamento(servico_id, valor, forma)` | Lança recebimento | sim | não |
 | `sugerir_post_instagram(atividade, objetivo)` | Ideias de conteúdo e legendas | não | não |
+| `consultar_conhecimento(termo, cliente_id?, tipo?)` | Busca notas e histórico de clientes, preços, dúvidas frequentes e políticas (adicionada em 13/11) | não | não |
 | `enviar_mensagem(rascunho_id)` | Envio real (fase pós-MVP) | externo | **sim** |
 
 ---
@@ -279,7 +280,7 @@ Foco no **ciclo completo de atendimento**, usando **dados cadastrados e de demon
 |---|---|---|
 | Nada sai sem o MEI aprovar | Orçamento, contrato e mensagem nascem como `rascunho` e só viram `aprovado` ou `descartado` por decisão do usuário no cartão. Decisão repetida não muda nada. No MVP não há envio automático: a mensagem é copiada e colada. | `supabase/04-documentos.sql` (`item_decidir`), `src/app/painel/agente/Cartao.tsx` |
 | Documento aprovado não é refeito | O banco recusa regerar orçamento ou contrato já aprovado. | `supabase/04-documentos.sql` |
-| Entrada do modelo validada | Cada uma das 16 ferramentas tem esquema `zod`; entrada inválida não executa e volta ao modelo como `entrada_invalida`. | `src/lib/agente/ferramentas/executar.ts` |
+| Entrada do modelo validada | Cada uma das 17 ferramentas tem esquema `zod`; entrada inválida não executa e volta ao modelo como `entrada_invalida`. | `src/lib/agente/ferramentas/executar.ts` |
 | Regras de negócio no banco | A IA interpreta; as funções SQL garantem estados do serviço e evitam cliente duplicado. | `supabase/02..05-*.sql` |
 | Teto de etapas por pedido | No máximo 8 voltas do modelo por mensagem do usuário. | `src/lib/agente/loop.ts` (`MAX_VOLTAS`) |
 | Teto de custo por dia | Limite diário de tokens por MEI (padrão 400 mil, `AGENTE_LIMITE_DIARIO_TOKENS`). | `src/lib/agente/uso.ts` |
@@ -363,10 +364,11 @@ MEIagente/
 
 ## 14. Como rodar
 
-1. Crie um projeto no Supabase. No **SQL Editor**, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/08-proatividade.sql`. O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente: ele usa `pg_cron` e `pg_net` e precisa que você troque `<APP_URL>` e `<CRON_SECRET>` antes de rodar (sem commitar o resultado). Localmente, o botão **Verificar agora** do Início faz o mesmo que o agendamento.
+1. Crie um projeto no Supabase. No **SQL Editor**, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/10-conhecimento.sql`. O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente: ele usa `pg_cron` e `pg_net` e precisa que você troque `<APP_URL>` e `<CRON_SECRET>` antes de rodar (sem commitar o resultado). Localmente, o botão **Verificar agora** do Início faz o mesmo que o agendamento.
 2. Copie `.env.example` para `.env.local` e preencha `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `CRON_SECRET` e `FEATHERLESS_API_KEY`. Use `AGENTE_MODELO=google/gemma-4-31B-it`. A service role key deve ficar apenas no servidor. Não há `APP_URL`.
 3. Rode `npm install` e `npm run dev`; abra `http://localhost:3000/setup` e crie seu usuário. Complete o cadastro do negócio na tela seguinte.
 4. Para carregar a demonstração, abra `supabase/seed/demo.sql`, substitua `<EMAIL_DO_USUARIO>` pelo email usado em `/setup` e execute o arquivo no SQL Editor. O seed pode ser executado mais de uma vez; ele cria o MEI Refrigeração Bueno, cinco clientes, um serviço pago, um agendamento para amanhã e a proposta #009 de Carlos parada há quatro dias.
+   Para a demonstração completa, use `supabase/seed/demo-completo.sql`, com **outra conta** (é um MEI por usuário; rodar os dois seeds na mesma conta renomeia o MEI). Ele também troca `<EMAIL_DO_USUARIO>` e pode ser executado mais de uma vez. Cria o MEI fictício Lima Reparos e Climatização com 20 clientes inventados (telefones `62 90000-0001` a `0020`), serviços em todos os status, agenda passada e futura, pagamentos integral e parcial, orçamentos, contratos e mensagens em todos os status, propostas paradas com tarefa aberta, feita e ignorada, memórias e a base de conhecimento (preços, dúvidas frequentes, políticas e notas por cliente) que o agente consulta com `consultar_conhecimento`.
 5. Quando as rotas de chat e agendador estiverem disponíveis, execute `./scripts/smoke.sh` com o servidor local em execução para conferir as respostas HTTP sem sessão.
 
 Para verificar o código sem banco real nem chamada ao modelo, rode `npm test` e `npm run lint`. `npm run build` também precisa das variáveis de `.env.local`; valores fictícios bastam para o build local.
