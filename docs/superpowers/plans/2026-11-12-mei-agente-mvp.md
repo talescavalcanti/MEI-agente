@@ -18,7 +18,7 @@
 - **Violação de regra = `raise exception 'regra: <frase em português para o usuário>'`.** O prefixo `regra:` é o contrato com a camada de ferramentas.
 - **Contrato do `Rpc`** (igual em teste e produção, definido na Task 2): função que devolve uma linha (`returns meis`) vira **objeto**; `setof`/`returns table` vira **lista**; `void` vira `null`; `numeric` vira `number`; erro é `Error` com a mensagem crua do Postgres (testar regra com `startsWith("regra:")`). O `Rpc` de produção (Task 11) lança `new Error(error.message)`.
 - **Clientes (decidido na Task 3):** em `cliente_salvar`, campo em branco ou `null` não apaga o valor gravado (não há como limpar um campo por essa função). `cliente_buscar` devolve no máximo 10: a tela de Clientes (Task 14) precisa de uma função de listagem própria, `cliente_listar(p_mei)`, criada nela.
-- **Sem `APP_URL` (decidido em 13/11):** o app roda localmente e ainda não tem endereço público. `env.appUrl` e `publicAppUrl` saem do código e do `.env.example`; `metadataBase` fica `null`. Volta no deploy (Task 16), se precisar.
+- **Sem `APP_URL` (decidido em 13/11):** o app roda localmente e ainda não tem endereço público. `env.appUrl` e `publicAppUrl` saem do código e do `.env.example`; o campo `metadataBase` sai do layout. Volta no deploy (Task 16), se precisar.
 - **Modelo (decidido em 13/11):** `AGENTE_MODELO=google/gemma-4-31B-it` na Featherless (`tool_use` sim, contexto de **32k tokens**). Com 32k, o `llm.ts` precisa limitar o histórico reenviado às últimas N mensagens inteiras (nunca cortar entre chamada e resultado) e as descrições das ferramentas devem ser curtas.
 - **Funções de listagem das telas (Task 14)** ficam em `supabase/07-consultas.sql` (`cliente_listar`, `documentos_listar`, `mensagens_listar`), e não em `02`/`04`, para não conflitar com a Task 9, que mexe no `04-documentos.sql`.
 - **Build:** `npm run build` exige as variáveis de ambiente (o `env.ts` valida na carga); para build local sem banco, usar um `.env.local` com valores fictícios, nunca commitado.
@@ -104,10 +104,10 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 - Create: `.env.example`, `src/app/api/health/route.ts`, `src/app/painel/page.tsx` (provisória), `tests/fundacao.test.ts`
 
 **Interfaces:**
-- Produces: `db` (`@/lib/supabase`), `env` com `supabaseUrl, supabaseServiceKey, appUrl, cronSecret, sessionSecret, agenteModelo e featherlessApiKey (obrigatórias), limiteDiarioTokens (default 400000)`; `requireUser(): Promise<SessionUser>`, `requireUserApi()`, `PRIVATE_HEADERS`; `SessionUser = { id, email, name, role }`; cookie `mei_session`.
+- Produces: `db` (`@/lib/supabase`), `env` com `supabaseUrl, supabaseServiceKey, cronSecret, sessionSecret, agenteModelo e featherlessApiKey (obrigatórias), limiteDiarioTokens (default 400000)`; `requireUser(): Promise<SessionUser>`, `requireUserApi()`, `PRIVATE_HEADERS`; `SessionUser = { id, email, name, role }`; cookie `mei_session`.
 
 - [x] **Step 1:** Copiar os arquivos. Remover: `ig_account_id` (de `users.ts`, `dal.ts`, `auth.sql`), `getActiveAccount`/`canAccessAccount`/`requireAccountApi`, cookie de conta ativa, `assignAccount`, rotas abertas do proxy que não existem aqui. `SESSION_COOKIE = "mei_session"`. Trocar "meu-chat" por "MEIagente" em títulos e `Wordmark`.
-- [x] **Step 2:** `.env.example` com `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`, `CRON_SECRET`, `SESSION_SECRET`, `FEATHERLESS_API_KEY`, `AGENTE_MODELO`, `AGENTE_LIMITE_DIARIO_TOKENS` (sem valores).
+- [x] **Step 2:** `.env.example` com `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `SESSION_SECRET`, `FEATHERLESS_API_KEY`, `AGENTE_MODELO`, `AGENTE_LIMITE_DIARIO_TOKENS` (sem valores).
 - [x] **Step 3:** `/api/health`: `200 {status:"ok"}` quando `select 1` em `users` responde, `503` quando não.
 - [x] **Step 4:** `PainelShell` com o menu novo: Início `/painel`, Agente `/painel/agente`, Clientes, Serviços, Agenda, Documentos, Mensagens, Meu negócio `/painel/negocio`. Props reduzidas a `{ userName, navCounts?, children }`.
 - [x] **Step 5:** `tests/fundacao.test.ts`: `signSession` + `verifySession` devolve o mesmo `sub`; token adulterado devolve `null`.
