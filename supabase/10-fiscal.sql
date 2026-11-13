@@ -1,6 +1,6 @@
 -- ============================================================================
 -- MEIagente — nota fiscal assistida (NFS-e) e controle de faturamento
--- Rode no SQL Editor do Supabase, depois do 08-proatividade.sql. Idempotente.
+-- Rode no SQL Editor do Supabase, depois do 09-meta.sql. Idempotente.
 --
 -- Mesma postura dos anteriores: RLS ligado e SEM políticas; toda função de
 -- domínio recebe `p_mei` e filtra por ele (id de outro MEI = id inexistente);

@@ -433,7 +433,7 @@ MEI-agente-/
 │       ├── documentos/     orçamento, contrato e formatação
 │       ├── dominio/        tipos e regras do MEI
 │       └── auth/           sessão, senha e limite de login
-├── supabase/               SQL em ordem (01-auth ... 08-proatividade, 90-cron)
+├── supabase/               SQL em ordem (01-auth ... 10-fiscal, 90-cron)
 │   └── seed/               dados de demonstração
 ├── tests/                  agente, documentos, domínio e SQL (PGlite)
 ├── scripts/                smoke HTTP e smoke do agente
@@ -446,7 +446,7 @@ MEI-agente-/
 
 ## 14. Como rodar
 
-**1. Banco.** Crie um projeto no Supabase. No SQL Editor, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/08-proatividade.sql`.
+**1. Banco.** Crie um projeto no Supabase. No SQL Editor, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/10-fiscal.sql`.
 
 > [!TIP]
 > O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente: ele usa `pg_cron` e `pg_net` e precisa que você troque `<APP_URL>` e `<CRON_SECRET>` antes de rodar (sem commitar o resultado). Localmente, o botão **Verificar agora** do Início faz o mesmo que o agendamento.
