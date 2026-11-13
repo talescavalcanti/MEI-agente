@@ -55,7 +55,7 @@ Verificação do `developer` em e94f613 (relatório do builder-02): `npm test` 3
 ## 4b. Banco real (Supabase)
 
 - Rodados: `01` a `10` (o `05` atual foi reaplicado em 13/11 pelo orquestrador: o banco estava com a `tarefas_gerar_followups(int)` antiga). Falta só o `90-cron.sql`.
-- MEIs: "paulo eletricista" (conta do dono, com o Instagram @avoralabss.br ligado em `canais_conectados`), "Fotografo" (Victor) e **"Lima Reparos e Climatização"** (conta `iapromptly@gmail.com`, seed `demo-completo.sql` rodado em 13/11: 20 clientes, 29 serviços nos 8 status, 15 mensagens, 4 tarefas, 6 memórias, 41 itens de conhecimento).
+- MEIs: "paulo eletricista" (conta do dono, com o Instagram @avoralabss.br ligado em `canais_conectados`), "Fotografo" (Victor) e **"Lima Reparos e Climatização"** (conta de demonstração do dono, seed `demo-completo.sql` rodado em 13/11: 20 clientes, 29 serviços nos 8 status, 15 mensagens, 4 tarefas, 6 memórias, 41 itens de conhecimento).
 - O dono pôs `DATABASE_URL` (session pooler) no `.env.local`. A senha tem caracteres especiais: não usar `new URL()`/`connectionString`; separar pelo último `@`. Rodar SQL no banco real só com pedido do dono.
 
 ## 5. Deploy (Vercel)
