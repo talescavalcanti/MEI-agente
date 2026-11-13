@@ -21,7 +21,7 @@ O MEI descreve o serviço em uma frase. O agente organiza o resto e só age com 
 </p>
 
 <p>
-<b>Demo em vídeo:</b> <a href="https://pub-544e5cb5fea74a52aaeb7059bd01a459.r2.dev/meiagente-video-compressed.mp4">assistir</a>
+<b>Pitch:</b> <a href="https://meiagente.talescavalcanti.dev/lp">landing page</a> &nbsp;·&nbsp; <b>Demo em vídeo:</b> <a href="https://pub-544e5cb5fea74a52aaeb7059bd01a459.r2.dev/meiagente-video-compressed.mp4">assistir</a> &nbsp;·&nbsp; <b>App:</b> <a href="https://meiagente.talescavalcanti.dev">meiagente.talescavalcanti.dev</a>
 </p>
 
 <p>
