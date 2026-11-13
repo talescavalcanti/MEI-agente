@@ -19,16 +19,16 @@ e o [`AGENTS.md`](../../AGENTS.md) (fluxo de git). Este arquivo é o resumo para
 | Criar conta | concluída | PRs #24 e #27 |
 | Meta, parte 1 (receber mensagens) | concluída | PR #26 |
 | Meta, parte 2 (enviar o que foi aprovado) | não começada | |
-| Base de conhecimento + seed completo | em andamento, builder-02, `feat/conhecimento` | |
+| Base de conhecimento + seed completo | concluída (17ª ferramenta `consultar_conhecimento`) | PR #29 |
 
-Verificação do `developer` em 00f2ae6: `npm test` 350/350, `npm run lint` limpo, `npm run build` ok.
+Verificação do `developer` em e94f613 (relatório do builder-02): `npm test` 381/381, `npm run lint` limpo, `npm run build` ok.
 
 ## 2. Decisões (registradas também no plano)
 
 - **Modelo:** `AGENTE_MODELO=google/gemma-4-31B-it` na Featherless, contexto de 32k. Se o smoke falhar, trocar por um Qwen 3. Plano Featherless: só 2 pedidos simultâneos com modelo de 31B.
 - **Desvios aprovados em 13/11** (seção própria no plano): integração com a Meta e base de conhecimento com seed sintético.
-- **SQL nos testes:** `tests/helpers/banco.ts` carrega `supabase/0*.sql` (PR #26); com `feat/conhecimento` passa a `supabase/[0-8]\d-*.sql`. `90-cron.sql` fica de fora. Há dois arquivos 09 (`09-meta.sql` e, na branch fiscal, `09-fiscal.sql`), independentes.
-- **Builders do Maestri:** o dono voltou a liberar delegação em 13/11. builder-03 fez a Meta parte 1; builder-02 está na base de conhecimento.
+- **SQL nos testes:** `tests/helpers/banco.ts` carrega `supabase/[0-8]\d-*.sql` (01 a 89). `90-cron.sql` fica de fora. Há dois arquivos 09 (`09-meta.sql` e, na branch fiscal, `09-fiscal.sql`), independentes.
+- **Builders do Maestri:** o dono voltou a liberar delegação em 13/11. builder-03 fez a Meta parte 1 (PR #26); builder-02 fez a base de conhecimento (PR #29).
 
 ## 3. `main` está bagunçada
 
@@ -40,8 +40,8 @@ Verificação do `developer` em 00f2ae6: `npm test` 350/350, `npm run lint` limp
 
 **Código:**
 1. Meta parte 2: enviar pelo Direct/WhatsApp a mensagem que o MEI aprovou (clique, nunca automático); mostrar as mensagens recebidas no painel; tela para ligar a conta (hoje é por SQL).
-2. Base de conhecimento (builder-02): revisar o relatório e o PR.
-3. Integrar a T17 (nota fiscal) quando a equipe dela abrir PR para `developer`.
+2. Base de conhecimento: conferir com o modelo real se ele chama `consultar_conhecimento` na hora certa.
+3. Integrar a T17 (nota fiscal) quando a equipe dela abrir PR para `developer`. Vai conflitar no fim de `definicoes.ts`, `executar.ts`, `prompt.ts`, `tipos.ts` e na lista de `tests/agente/ferramentas.test.ts`: são acréscimos dos dois lados, manter os dois (a lista do teste segue a ordem final do array).
 4. Minuta gravada em duas etapas (T8): criar `servico_dados_documento(p_mei, p_servico)` no SQL e usar no executor.
 5. Teste intermitente "token adulterado devolve null" (`tests/fundacao.test.ts`, ~1 em 16): corromper um caractere do meio da assinatura, não o último.
 6. Sem trava para dois turnos simultâneos na mesma conversa.
@@ -49,7 +49,7 @@ Verificação do `developer` em 00f2ae6: `npm test` 350/350, `npm run lint` limp
 
 **Do dono:**
 1. Smoke real do modelo: `JITI_ALIAS='{"@":"./src","server-only":"./tests/helpers/vazio.ts"}' npx jiti scripts/agente-smoke.ts --confirmo` e de novo com `--sem-streaming`.
-2. SQL no Supabase: `01` a `08` já rodados. Falta `09-meta.sql` e depois `select public.canal_conectar('<id do MEI>', 'instagram', '17841429113044909');`. Depois, `10-conhecimento.sql` e o seed completo quando entrarem.
+2. SQL no Supabase: `01` a `08` já rodados. Falta `09-meta.sql` e depois `select public.canal_conectar('<id do MEI>', 'instagram', '17841429113044909');`. Depois `10-conhecimento.sql` e, para a demo, `seed/demo-completo.sql` numa conta separada (criar por `/cadastro`; `/setup` só funciona com o banco vazio).
 3. Autorizar o PR `developer → main` (deploy de produção).
 4. Revogar na Featherless a chave antiga `rc_0d88…7341`, que está no histórico do git (o repo agora é **público**). A chave atual é outra.
 
@@ -81,5 +81,5 @@ Verificação do `developer` em 00f2ae6: `npm test` 350/350, `npm run lint` limp
 
 1. `git fetch origin && git pull --ff-only` em `developer` (nunca `checkout` na pasta principal; builders usam `../MEIagente-wt/<slug>`).
 2. Ler este arquivo e o plano.
-3. Ver se o builder-02 terminou `feat/conhecimento`.
+3. Ver se a T17 (nota fiscal) chegou ao `developer`.
 4. Com o dono: §4 "Do dono", na ordem.
