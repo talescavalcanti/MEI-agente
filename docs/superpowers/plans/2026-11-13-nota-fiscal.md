@@ -15,7 +15,7 @@
 
 ## Step 0: conferir antes de codar (não verificado neste plano)
 
-O builder confere na documentação oficial do Emissor Nacional / NFS-e padrão nacional e registra o que achou no topo de `supabase/08-fiscal.sql`, num comentário com a data e a fonte:
+O builder confere na documentação oficial do Emissor Nacional / NFS-e padrão nacional e registra o que achou no topo de `supabase/09-fiscal.sql`, num comentário com a data e a fonte:
 
 1. Formato do **código de tributação nacional** (`cTribNac`) e do **NBS**, e onde baixar a tabela oficial.
 2. **Layout do XML** da NFS-e emitida: caminho das tags do tomador (CPF/CNPJ), valor do serviço, competência, código de tributação, número da nota e chave de acesso. Usar um XML de exemplo da documentação como fixture em `tests/fiscal/fixtures/`.
@@ -44,7 +44,7 @@ Se algum item contradisser este plano, **pare e avise o orquestrador** antes de 
 ## Estrutura de arquivos
 
 ```text
-supabase/08-fiscal.sql                    tudo de SQL desta task (altera tabelas de 02, 04 e 05 de forma idempotente)
+supabase/09-fiscal.sql                    tudo de SQL desta task (altera tabelas de 02, 04 e 05 de forma idempotente)
 src/lib/fiscal/{documento,xml,codigos,tipos}.ts
 src/lib/agente/ferramentas/{definicoes,executar}.ts   (modifica: 3 ferramentas novas, cartão "nota")
 src/lib/agente/prompt.ts                  (modifica: regras de nota no PROMPT_SISTEMA)
@@ -65,7 +65,7 @@ tests/sql/fiscal.test.ts, tests/fiscal/{documento,xml}.test.ts, tests/fiscal/fix
 ### Task 17a: SQL fiscal (dados, nota, regras, faturamento, pendências)
 
 **Files:**
-- Create: `supabase/08-fiscal.sql`, `tests/sql/fiscal.test.ts`; Modify: `src/lib/dominio/tipos.ts`
+- Create: `supabase/09-fiscal.sql`, `tests/sql/fiscal.test.ts`; Modify: `src/lib/dominio/tipos.ts`
 
 **Interfaces:**
 - Produces (alterações idempotentes, `add column if not exists` e troca de `check` por nome):
@@ -110,9 +110,18 @@ tests/sql/fiscal.test.ts, tests/fiscal/{documento,xml}.test.ts, tests/fiscal/fix
   - `faturamento_ano`: pagamentos 30000 + 35000 com uma nota emitida de 30000 → `total 65000, com_nota 30000, sem_nota 35000, faixa atencao` (com limite 81000).
   - `tarefas_gerar_notas`: serviço pago de PJ há 6 dias → 1 tarefa; rodar de novo → continua 1; cliente PF não gera; serviço com nota emitida não gera.
   - Isolamento: toda função com id de outro MEI se comporta como id inexistente.
-  - Idempotência: carregar `08-fiscal.sql` duas vezes não quebra (já coberto pelo `abrirBancoTeste`).
+  - Idempotência: carregar `09-fiscal.sql` duas vezes não quebra (já coberto pelo `abrirBancoTeste`).
 - [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
 - [ ] **Step 5:** Commit `feat: nota fiscal assistida no sql`.
+
+**Decisões da 17a (13/11, revisadas pelo orquestrador):**
+- Arquivo é `09-fiscal.sql` (a `developer` ganhou `08-proatividade.sql`); roda depois do 08.
+- `mensagem_rascunhar` (do 04) é **redefinida** no 09 para aceitar `envio_nota` e `nota_id`. Rodar o 04 de novo sem o 09 volta a versão antiga: sempre rodar o 09 depois.
+- Nota parcial: cada chamada cria uma parcial nova (a soma limita); nota inteira em rascunho é refeita com o mesmo id.
+- `municipio_diferente` só avisa quando o endereço termina em "Cidade/UF" ou "Cidade - UF".
+- `tarefas_gerar_notas` não recria se já houve qualquer tarefa `emitir_nota` do serviço.
+- `faturamento_ano` usa `pagamentos.criado_em` como data do recebimento.
+- **Falta `nota_cancelar(p_mei, p_id)`** (status `cancelada` existe, função não): entra na 17d se o cartão tiver "Cancelar"; o caminho normal do divergente é registrar de novo.
 
 ### Task 17b: Documento, XML e códigos em TypeScript puro
 
