@@ -2,8 +2,7 @@
 
 > Um agente de IA que funciona como assistente administrativo, comercial e de marketing para Microempreendedores Individuais (MEIs).
 
-**Status:** proposta / MVP em desenvolvimento para o **AKCIT Camp (hackathon)**.
-Tudo o que está descrito abaixo como "arquitetura", "ferramentas" e "roadmap" é o **plano do projeto**, não uma funcionalidade já entregue.
+**Status:** MVP em desenvolvimento para o **AKCIT Camp (hackathon)**. O banco de domínio e o cadastro inicial já estão implementados; chat, telas de consulta e agendador ainda estão em integração.
 
 ---
 
@@ -338,15 +337,13 @@ MEIagente/
 
 ## 14. Como rodar
 
-> ⚠️ A stack ainda não foi definida. Esta seção será preenchida após a decisão técnica.
+1. Crie um projeto no Supabase. No **SQL Editor**, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/07-consultas.sql` que estiverem presentes nesta versão. O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente.
+2. Copie `.env.example` para `.env.local` e preencha `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `CRON_SECRET` e `FEATHERLESS_API_KEY`. Use `AGENTE_MODELO=google/gemma-4-31B-it`. A service role key deve ficar apenas no servidor. Não há `APP_URL`.
+3. Rode `npm install` e `npm run dev`; abra `http://localhost:3000/setup` e crie seu usuário. Complete o cadastro do negócio na tela seguinte.
+4. Para carregar a demonstração, abra `supabase/seed/demo.sql`, substitua `<EMAIL_DO_USUARIO>` pelo email usado em `/setup` e execute o arquivo no SQL Editor. O seed pode ser executado mais de uma vez; ele cria o MEI Refrigeração Bueno, cinco clientes, um serviço pago, um agendamento para amanhã e a proposta #009 de Carlos parada há quatro dias.
+5. Quando as rotas de chat e agendador estiverem disponíveis, execute `./scripts/smoke.sh` com o servidor local em execução para conferir as respostas HTTP sem sessão.
 
-```bash
-# 1. clonar o repositório
-# 2. configurar variáveis de ambiente (.env.example → .env)
-# 3. instalar dependências
-# 4. carregar dados de demonstração
-# 5. iniciar a aplicação
-```
+Para verificar o código sem banco real nem chamada ao modelo, rode `npm test` e `npm run lint`. `npm run build` também precisa das variáveis de `.env.local`; valores fictícios bastam para o build local.
 
 ---
 
