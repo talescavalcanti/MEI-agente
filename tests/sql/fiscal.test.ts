@@ -29,8 +29,6 @@ const CNPJ_MEI = "11.222.333/0001-81";
 const CNPJ_CLIENTE = "11.444.777/0001-61";
 const CNPJ_OUTRO = "19131243000197";
 const CPF = "529.982.247-25";
-// Exemplo oficial da Receita (perguntas e respostas do CNPJ alfanumérico).
-const CNPJ_ALFA = "12.ABC.345/01DE-35";
 
 const regra = (frase?: string) => (frase ? `regra: ${frase}` : /^regra: /);
 
