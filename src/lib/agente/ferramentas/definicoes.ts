@@ -156,4 +156,13 @@ export const FERRAMENTAS: Ferramenta[] = [
     descricao: "Guarda um fato duradouro sobre o negócio para lembrar depois.",
     esquema: z.object({ fato: z.string().min(1) }),
   },
+  {
+    nome: "consultar_conhecimento",
+    descricao: "Busca no histórico de clientes, preços, dúvidas frequentes e políticas do negócio.",
+    esquema: z.object({
+      termo: z.string().min(1),
+      cliente_id: id("cliente_id").optional(),
+      tipo: z.enum(["nota_cliente", "atendimento", "preco", "faq", "politica"]).optional(),
+    }),
+  },
 ];
