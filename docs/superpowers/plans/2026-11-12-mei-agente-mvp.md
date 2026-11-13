@@ -17,6 +17,8 @@
 - **Toda função SQL de domínio recebe `p_mei uuid` como 1º argumento e filtra por ele.** Id de outro MEI se comporta como id inexistente.
 - **Violação de regra = `raise exception 'regra: <frase em português para o usuário>'`.** O prefixo `regra:` é o contrato com a camada de ferramentas.
 - **Contrato do `Rpc`** (igual em teste e produção, definido na Task 2): função que devolve uma linha (`returns meis`) vira **objeto**; `setof`/`returns table` vira **lista**; `void` vira `null`; `numeric` vira `number`; erro é `Error` com a mensagem crua do Postgres (testar regra com `startsWith("regra:")`). O `Rpc` de produção (Task 11) lança `new Error(error.message)`.
+- **Clientes (decidido na Task 3):** em `cliente_salvar`, campo em branco ou `null` não apaga o valor gravado (não há como limpar um campo por essa função). `cliente_buscar` devolve no máximo 10: a tela de Clientes (Task 14) precisa de uma função de listagem própria, `cliente_listar(p_mei)`, criada nela.
+- **Build:** `npm run build` exige as variáveis de ambiente (o `env.ts` valida na carga); para build local sem banco, usar um `.env.local` com valores fictícios, nunca commitado.
 - **SQL idempotente** (`create table if not exists`, `create or replace function`), RLS ligado e **sem políticas**, como no `meu-chat`.
 - **Valores e datas de documento nunca vêm do texto do modelo**: orçamento e minuta são renderizados por template a partir do banco.
 - **Minuta de contrato sempre carrega o aviso** "Minuta gerada automaticamente. Revise antes de usar; não substitui orientação jurídica." (README §9).
