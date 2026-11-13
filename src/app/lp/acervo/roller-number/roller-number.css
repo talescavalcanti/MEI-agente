@@ -1,0 +1,5 @@
+.roller { display: inline-flex; align-items: flex-start; height: 1em; overflow: hidden; line-height: 1; }
+.roller__digit { position: relative; width: 1ch; height: 1em; overflow: hidden; }
+.roller__strip { display: flex; flex-direction: column; transform: translateY(-10em); will-change: transform; }
+.roller__strip span,
+.roller__affix { display: flex; align-items: center; justify-content: center; height: 1em; font-variant-numeric: tabular-nums; }
