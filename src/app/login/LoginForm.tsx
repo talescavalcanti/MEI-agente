@@ -44,6 +44,12 @@ export default function LoginForm() {
           Criar conta
         </Link>
       </p>
+
+      <p className="text-center text-caption text-muted">
+        <Link href="/privacidade" className="text-link">
+          Política de privacidade
+        </Link>
+      </p>
     </form>
   );
 }
