@@ -412,6 +412,7 @@ $$;
 -- Decisão do usuário (botão do cartão): aprovar ou descartar um rascunho.
 -- Item fora de `rascunho` não muda e volta com o status atual (clique duplo,
 -- aprovar depois de descartar). Devolve {tipo, id, status, mudou}.
+-- Decisão que muda o item fica em agente_acoes (tipo `decisao`, 06-agente.sql).
 create or replace function public.item_decidir(p_mei uuid, p_tipo text, p_id uuid, p_decisao text, p_user uuid)
 returns jsonb
 language plpgsql
@@ -423,6 +424,7 @@ declare
   v_decisao text := lower(btrim(coalesce(p_decisao, '')));
   v_status  text;
   v_novo    text;
+  v_saida   jsonb;
 begin
   if v_decisao not in ('aprovar', 'descartar') then
     raise exception 'regra: decisão inválida (use aprovar ou descartar)';
@@ -444,7 +446,19 @@ begin
     v_tabela
   ) using v_novo, p_user, p_id, p_mei;
 
-  return jsonb_build_object('tipo', v_tipo, 'id', p_id, 'status', v_novo, 'mudou', true);
+  v_saida := jsonb_build_object('tipo', v_tipo, 'id', p_id, 'status', v_novo, 'mudou', true);
+
+  -- Trilha de auditoria (README §9): só decisão que mudou o item. A tabela
+  -- nasce no 06-agente.sql; até lá, não há onde gravar.
+  if to_regclass('public.agente_acoes') is not null then
+    execute 'insert into public.agente_acoes (mei_id, tipo, nome, entrada, saida, user_id)
+             values ($1, ''decisao'', $2, $3, $4, $5)'
+    using p_mei, v_decisao,
+          jsonb_build_object('tipo', v_tipo, 'id', p_id, 'decisao', v_decisao),
+          v_saida, p_user;
+  end if;
+
+  return v_saida;
 end;
 $$;
 
