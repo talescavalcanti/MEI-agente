@@ -5,7 +5,6 @@ import Wordmark from "../components/Wordmark";
 import { ProcessRail } from "./acervo/process-rail";
 import { RevealAccordion } from "./acervo/reveal-accordion";
 import { RollerNumber } from "./acervo/roller-number";
-import { WatermarkRise } from "./acervo/watermark-rise";
 import {
   COMPARACAO,
   EQUIPE,
@@ -18,6 +17,7 @@ import {
   PERGUNTAS,
 } from "./conteudo";
 import HeroDemo from "./HeroDemo";
+import MarcaRodape from "./MarcaRodape";
 import Motion from "./Motion";
 import Nav from "./Nav";
 import "./lp.css";
@@ -397,37 +397,28 @@ function Seguranca() {
               Nada sai sem você aprovar.
             </h2>
             <p className="lp-cutout__lead" data-reveal>
-              A IA interpreta e prepara. As regras de negócio, no banco de dados, mantêm os registros consistentes.
-              Mensagem e documento só saem depois do seu clique.
+              O agente prepara. Você decide. Só depois disso algo chega ao seu cliente.
             </p>
             <ul className="lp-garantias" data-reveal-group>
               {GARANTIAS.map((g) => (
-                <li key={g.titulo}>
-                  <h3>{g.titulo}</h3>
-                  <p>{g.texto}</p>
-                </li>
+                <li key={g}>{g}</li>
               ))}
             </ul>
           </div>
 
           <figure className="lp-log" data-reveal>
-            <figcaption className="lp-log__cap">
-              <span>Histórico do agente</span>
-              <span>exemplo</span>
-            </figcaption>
+            <figcaption className="lp-log__cap">Histórico do serviço da Maria</figcaption>
             <ol className="lp-log__linhas">
               {HISTORICO.map((h) => (
-                <li key={h.hora + h.acao} data-autor={h.autor}>
-                  <span className="lp-log__hora">{h.hora}</span>
+                <li key={h.acao} data-autor={h.autor}>
                   <span className="lp-log__autor">{h.autor}</span>
                   <span className="lp-log__acao">{h.acao}</span>
-                  <span className="lp-log__res">{h.resultado}</span>
+                  <span className="lp-log__estado" data-estado={h.estado}>
+                    {h.estado === "aprovado" ? "Aprovado" : "Rascunho"}
+                  </span>
                 </li>
               ))}
             </ol>
-            <p className="lp-log__aviso">
-              Minutas geradas por IA são ponto de partida. Revise e, se precisar, procure orientação jurídica.
-            </p>
           </figure>
         </div>
       </div>
@@ -517,7 +508,6 @@ function Final() {
         <div className="lp-shell">
           <div className="lp-footer__row">
             <div className="lp-footer__marca">
-              <Wordmark className="lp-wordmark-dark text-[1.35rem]" />
               <p>Assistente do microempreendedor individual. Prepara, organiza e lembra, sempre com a sua aprovação.</p>
             </div>
             <nav className="lp-footer__links" aria-label="Rodapé">
@@ -561,7 +551,7 @@ function Final() {
             <p>Código aberto sob a licença MIT.</p>
           </div>
         </div>
-        <WatermarkRise text="MEIagente" className="lp-footer__mark" />
+        <MarcaRodape />
       </footer>
     </div>
   );
