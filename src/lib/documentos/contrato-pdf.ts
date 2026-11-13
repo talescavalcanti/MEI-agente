@@ -33,7 +33,7 @@ export type Op =
       /** Fica na margem de baixo, fora da área do corpo. */
       rodape: boolean;
     }
-  | { tipo: "linha"; x1: number; y1: number; x2: number; y2: number }
+  | { tipo: "linha"; x1: number; y1: number; x2: number; y2: number; escura?: boolean }
   | { tipo: "quadro"; x: number; y: number; largura: number; altura: number }
   | { tipo: "marca" };
 
@@ -287,9 +287,13 @@ export function montarPaginas(d: ContratoPdfDados, m: Medida): Op[][] {
   // Texto da minuta: cláusula com o título em negrito na própria linha.
   for (const p of corpoDaMinuta(d.minuta)) {
     const clausula = /^(CLÁUSULA [^:\n]{1,80}:)\s*([\s\S]*)$/.exec(p);
+    // Parágrafo curto não se parte entre páginas (nem deixa linha órfã).
+    const linhasP = clausula
+      ? 1 + (clausula[2] ? quebrar(clausula[2], CORPO, false, UTIL).length : 0)
+      : quebrar(p, CORPO, false, UTIL).length;
+    garantir(altura({ texto: "", tamanho: CORPO }) * (linhasP <= 8 ? linhasP : 2));
     if (clausula) {
       const [, titulo, resto] = clausula;
-      garantir(altura({ texto: "", tamanho: CORPO }) * 2);
       paragrafo(titulo, CORPO, true);
       if (resto) paragrafo(resto);
     } else {
@@ -315,7 +319,7 @@ export function montarPaginas(d: ContratoPdfDados, m: Medida): Op[][] {
   const topoAssinatura = cursor;
   assinaturas.forEach(([, papel], i) => {
     const x = MARGEM + i * (larguraAssinatura + 40);
-    atual.push({ tipo: "linha", x1: x, y1: topoAssinatura, x2: x + larguraAssinatura, y2: topoAssinatura });
+    atual.push({ tipo: "linha", x1: x, y1: topoAssinatura, x2: x + larguraAssinatura, y2: topoAssinatura, escura: true });
     let y = topoAssinatura - 4;
     for (const t of nomes[i]) {
       desenhar({ texto: t, tamanho: 10, centro: true }, x, larguraAssinatura, y);
@@ -391,7 +395,7 @@ export async function gerarContratoPdf(d: ContratoPdfDados): Promise<Uint8Array>
           color: op.cinza ? CINZA : PRETO,
         });
       } else if (op.tipo === "linha") {
-        page.drawLine({ start: { x: op.x1, y: op.y1 }, end: { x: op.x2, y: op.y2 }, thickness: 0.6, color: TRACO });
+        page.drawLine({ start: { x: op.x1, y: op.y1 }, end: { x: op.x2, y: op.y2 }, thickness: op.escura ? 0.8 : 0.6, color: op.escura ? CINZA : TRACO });
       } else {
         page.drawRectangle({ x: op.x, y: op.y, width: op.largura, height: op.altura, borderColor: TRACO, borderWidth: 0.8 });
       }
