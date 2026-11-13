@@ -14,7 +14,7 @@ import {
   registerLoginFailure,
 } from "@/lib/auth/login-limit";
 
-export type AuthState = { error?: string } | undefined;
+export type AuthState = { error?: string; email?: string; name?: string } | undefined;
 
 /**
  * Limpa o Router Cache do cliente inteiro.
@@ -51,14 +51,14 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   const password = String(formData.get("password") ?? "");
   const next = safeNext(String(formData.get("de") ?? "") || null);
 
-  if (!email || !password) return { error: "Preencha email e senha." };
+  if (!email || !password) return { error: "Preencha email e senha.", email };
 
   // Limite de tentativas (src/lib/auth/login-limit.ts). A contagem é pelo
   // email DIGITADO, exista a conta ou não, e o aviso é o mesmo nos dois
   // casos — o bloqueio não revela quem tem conta aqui.
   const keys = loginKeys(email, clientIp((await headers()).get("x-forwarded-for")));
   if (await loginBlocked(keys)) {
-    return { error: "Muitas tentativas. Espere alguns minutos e tente de novo." };
+    return { error: "Muitas tentativas. Espere alguns minutos e tente de novo.", email };
   }
 
   const user = await findForLogin(email);
@@ -69,13 +69,13 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   if (!user) {
     await fakeVerify();
     await registerLoginFailure(keys);
-    return { error: "Email ou senha incorretos." };
+    return { error: "Email ou senha incorretos.", email };
   }
 
   const ok = await verifyPassword(password, user.password_hash);
   if (!ok) {
     await registerLoginFailure(keys);
-    return { error: "Email ou senha incorretos." };
+    return { error: "Email ou senha incorretos.", email };
   }
 
   await clearLoginFailures(email);
@@ -98,18 +98,18 @@ export async function logout() {
  * inicia a sessão e manda cadastrar o negócio em `/painel/negocio`.
  */
 export async function criarConta(_prev: AuthState, formData: FormData): Promise<AuthState> {
-  const probe = await probeUsers();
-  if (!probe.ok) return { error: `Banco indisponível: ${probe.message}` };
-
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!name) return { error: "Informe seu nome." };
-  if (!email.includes("@")) return { error: "Informe um email válido." };
+  const probe = await probeUsers();
+  if (!probe.ok) return { error: `Banco indisponível: ${probe.message}`, name, email };
+
+  if (!name) return { error: "Informe seu nome.", name, email };
+  if (!email.includes("@")) return { error: "Informe um email válido.", name, email };
 
   const bad = validatePassword(password);
-  if (bad) return { error: bad };
+  if (bad) return { error: bad, name, email };
 
   const role = probe.empty ? "admin" : "user";
 
@@ -122,9 +122,9 @@ export async function criarConta(_prev: AuthState, formData: FormData): Promise<
       role,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Não deu pra criar a conta." };
+    return { error: e instanceof Error ? e.message : "Não deu pra criar a conta.", name, email };
   }
-  if (!created) return { error: "Não deu pra criar a conta. Tente de novo." };
+  if (!created) return { error: "Não deu pra criar a conta. Tente de novo.", name, email };
 
   await createSessionCookie({ sub: created.id, role, ver: 1 });
   dropClientCache();
