@@ -1,6 +1,11 @@
 <div align="center">
 
-<h1>MEIagente</h1>
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/marca/meiagente-fundo-escuro.svg" />
+    <img alt="MEIagente" src="docs/marca/meiagente.svg" width="420" />
+  </picture>
+</h1>
 
 <p>
 Assistente administrativo, comercial e de marketing para Microempreendedores Individuais.<br/>
@@ -12,7 +17,7 @@ O MEI descreve o serviço em uma frase. O agente organiza o resto e só age com 
 <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-1f2328?style=flat-square&logo=nextdotjs&logoColor=white" />
 <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Postgres-1f2328?style=flat-square&logo=supabase&logoColor=white" />
 <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-1f2328?style=flat-square&logo=typescript&logoColor=white" />
-<img alt="Testes" src="https://img.shields.io/badge/testes-505%20passando-1f2328?style=flat-square" />
+<img alt="Testes" src="https://img.shields.io/badge/testes-584%20passando-1f2328?style=flat-square" />
 </p>
 
 <p>
