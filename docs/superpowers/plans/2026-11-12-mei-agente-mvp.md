@@ -18,6 +18,9 @@
 - **Violação de regra = `raise exception 'regra: <frase em português para o usuário>'`.** O prefixo `regra:` é o contrato com a camada de ferramentas.
 - **Contrato do `Rpc`** (igual em teste e produção, definido na Task 2): função que devolve uma linha (`returns meis`) vira **objeto**; `setof`/`returns table` vira **lista**; `void` vira `null`; `numeric` vira `number`; erro é `Error` com a mensagem crua do Postgres (testar regra com `startsWith("regra:")`). O `Rpc` de produção (Task 11) lança `new Error(error.message)`.
 - **Clientes (decidido na Task 3):** em `cliente_salvar`, campo em branco ou `null` não apaga o valor gravado (não há como limpar um campo por essa função). `cliente_buscar` devolve no máximo 10: a tela de Clientes (Task 14) precisa de uma função de listagem própria, `cliente_listar(p_mei)`, criada nela.
+- **Sem `APP_URL` (decidido em 13/11):** o app roda localmente e ainda não tem endereço público. `env.appUrl` e `publicAppUrl` saem do código e do `.env.example`; `metadataBase` fica `null`. Volta no deploy (Task 16), se precisar.
+- **Modelo (decidido em 13/11):** `AGENTE_MODELO=google/gemma-4-31B-it` na Featherless (`tool_use` sim, contexto de **32k tokens**). Com 32k, o `llm.ts` precisa limitar o histórico reenviado às últimas N mensagens inteiras (nunca cortar entre chamada e resultado) e as descrições das ferramentas devem ser curtas.
+- **Funções de listagem das telas (Task 14)** ficam em `supabase/07-consultas.sql` (`cliente_listar`, `documentos_listar`, `mensagens_listar`), e não em `02`/`04`, para não conflitar com a Task 9, que mexe no `04-documentos.sql`.
 - **Build:** `npm run build` exige as variáveis de ambiente (o `env.ts` valida na carga); para build local sem banco, usar um `.env.local` com valores fictícios, nunca commitado.
 - **SQL idempotente** (`create table if not exists`, `create or replace function`), RLS ligado e **sem políticas**, como no `meu-chat`.
 - **Valores e datas de documento nunca vêm do texto do modelo**: orçamento e minuta são renderizados por template a partir do banco.
@@ -68,6 +71,7 @@ MEIagente/
 │   ├── 04-documentos.sql      orcamentos, contratos, mensagens + aprovação
 │   ├── 05-pendencias.sql      tarefas + detecção de proposta parada
 │   ├── 06-agente.sql          conversas, conversa_mensagens, agente_acoes, agente_uso, memorias
+│   ├── 07-consultas.sql       funções de listagem das telas (Task 14)
 │   ├── 90-cron.sql            job do pg_cron (placeholder de segredo)
 │   └── seed/demo.sql          dados de demonstração
 ├── src/lib/
@@ -164,7 +168,7 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `pagamento_registrar(p_mei, p_servico, p_valor, p_forma) → jsonb {pago_total, restante, status}` — soma ≥ valor leva a `pago`
   - `servico_listar(p_mei, p_status text default null) → setof` (com nome do cliente); `agenda_listar(p_mei, p_de date, p_ate date) → setof`
 
-- [ ] **Step 1:** Testes:
+- [x] **Step 1:** Testes:
   - numeração: dois serviços do mesmo MEI → `numero` 1 e 2; outro MEI começa em 1.
   - `servico_registrar` com `valor: -5` → `regra: o valor precisa ser maior que zero`.
   - cenário do README: `fechado=true`, valor 800, data sem cliente.whatsapp/endereço/pagamento → `servico_faltantes = ['cliente.whatsapp','cliente.endereco','servico.forma_pagamento']`; depois de completar → `[]`.
@@ -172,8 +176,8 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `servico_mudar_status(…, 'pago')` → `regra:` (pago só por pagamento).
   - pagamentos 300 + 500 em serviço de 800 → 1º devolve `restante: 500`, 2º leva a `pago`.
   - `servico_atualizar` em serviço `pago` → `regra:`.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: servicos, agenda, pagamentos e maquina de estados`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: servicos, agenda, pagamentos e maquina de estados`.
 
 ### Task 5: Orçamento, contrato, mensagem e aprovação
 
@@ -194,7 +198,7 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `mensagem_marcar_enviada(p_mei, p_id) → mensagens` — exige `aprovado`; se `objetivo='envio_orcamento'`: `orcamentos.enviado_em = now()` e serviço `orcado → aguardando_resposta`; se tiver `tarefa_id`: tarefa `feita`
   - `item_ver(p_mei, p_tipo, p_id) → jsonb` — `{ item, mei, cliente, servico, orcamento }`: o `item` mais os campos no formato `DadosDocumento` de `src/lib/documentos/tipos.ts` (para cartão e impressão)
 
-- [ ] **Step 1:** Testes:
+- [x] **Step 1:** Testes:
   - `orcamento_gerar` em serviço sem valor → `regra: defina o valor do serviço antes do orçamento`.
   - itens somando 700 em serviço de 800 → `regra:`.
   - **Review Focus 1:** `item_decidir(aprovar)` duas vezes → 1ª `mudou: true`, 2ª `mudou: false`, `aprovado_em` igual; `aprovar` depois de `descartar` → `status: 'descartado'`, `mudou: false`.
@@ -202,8 +206,8 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `mensagem_marcar_enviada` em `rascunho` → `regra: aprove a mensagem antes de marcar como enviada`.
   - envio de orçamento: marcar enviada → `orcamentos.enviado_em` preenchido e serviço em `aguardando_resposta`.
   - `item_decidir` com id de outro MEI → `regra: item não encontrado`.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: orcamento, contrato, mensagem e aprovacao`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: orcamento, contrato, mensagem e aprovacao`.
 
 ### Task 6: Pendências (propostas paradas)
 
@@ -217,9 +221,9 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `tarefas_gerar_followups(p_dias int default 3) → table(mei_id, tarefa_id, servico_id)` — cria tarefa `aberta` para cada pendente sem tarefa aberta, de todos os MEIs; devolve só as novas
   - `tarefa_fechar(p_mei, p_id, p_status text) → tarefas`
 
-- [ ] **Step 1:** Testes: orçamento enviado há 4 dias aparece com `dias_parado = 4`; enviado há 1 dia não aparece; `tarefas_gerar_followups` rodado duas vezes cria 1 tarefa; tarefa `ignorada` não é recriada no mesmo dia mas o serviço continua em `propostas_pendentes`; serviço `confirmado` não aparece.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: deteccao de propostas paradas`.
+- [x] **Step 1:** Testes: orçamento enviado há 4 dias aparece com `dias_parado = 4`; enviado há 1 dia não aparece; `tarefas_gerar_followups` rodado duas vezes cria 1 tarefa; tarefa `ignorada` não é recriada no mesmo dia mas o serviço continua em `propostas_pendentes`; serviço `confirmado` não aparece.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: deteccao de propostas paradas`.
 
 ### Task 7: Documentos em TypeScript puro
 
@@ -347,10 +351,10 @@ Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administ
 - Consumes: `mei_salvar`, `mei_do_usuario`.
 - Produces: `requireMei(): Promise<{ user: SessionUser; mei: Mei }>` (redireciona para `/painel/negocio` se o usuário ainda não tem MEI); `salvarNegocio(prev, formData)`.
 
-- [ ] **Step 1:** `/setup` cria o usuário e segue para `/painel/negocio`. Formulário: nome do negócio, atividade (texto livre com sugestões: eletricista, técnico de manutenção, fotógrafo), cidade, telefone, chave Pix (opcional).
-- [ ] **Step 2:** Toda página do painel (menos `negocio`) começa com `requireMei()`.
-- [ ] **Step 3:** Verificar à mão: setup → negócio → `/painel`. `npm run build` passa.
-- [ ] **Step 4:** Commit `feat: primeiro acesso e cadastro do negocio`.
+- [x] **Step 1:** `/setup` cria o usuário e segue para `/painel/negocio`. Formulário: nome do negócio, atividade (texto livre com sugestões: eletricista, técnico de manutenção, fotógrafo), cidade, telefone, chave Pix (opcional).
+- [x] **Step 2:** Toda página do painel (menos `negocio`) começa com `requireMei()`.
+- [x] **Step 3:** Verificar à mão: setup → negócio → `/painel`. `npm run build` passa.
+- [x] **Step 4:** Commit `feat: primeiro acesso e cadastro do negocio`.
 
 ### Task 13: Tela do agente (chat e cartões de aprovação)
 
