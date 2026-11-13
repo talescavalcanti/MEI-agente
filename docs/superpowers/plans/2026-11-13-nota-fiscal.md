@@ -186,6 +186,8 @@ Comportamento:
 
 ---
 
+**Decisões da 17d (13/11):** `notas_a_emitir(p_mei)` (leitura) criada no fim do `09-fiscal.sql` para "Notas a emitir", no lugar de ler `tarefas` direto do TypeScript. URL do Emissor: `https://www.nfse.gov.br/EmissorNacional/Login`. Sem botão Cancelar. **Pendente:** [Mandar para o cliente] abre `/painel/agente?pedido=…`; a página do chat (hoje só em `main`) precisa ler `pedido` e preencher o campo.
+
 ## Integração depois da Task 17
 
 - **T15 (proatividade):** o cron também chama `tarefas_gerar_notas()`; o Início mostra "Notas a emitir" e o termômetro quando a faixa for `alerta` ou pior.
