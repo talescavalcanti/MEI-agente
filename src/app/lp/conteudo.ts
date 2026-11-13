@@ -70,43 +70,22 @@ export const COMPARACAO = {
   ],
 } as const;
 
-/** README §9, "Como isso está implementado", na língua de quem usa. */
+/**
+ * README §9, reduzido ao que quem usa precisa saber. Os detalhes técnicos
+ * (validação das ferramentas, teto de etapas e de custo) ficam no README.
+ */
 export const GARANTIAS = [
-  {
-    titulo: "Rascunho até você decidir",
-    texto: "Orçamento, contrato e mensagem só viram aprovados ou descartados no seu clique. Decidir duas vezes não muda nada.",
-  },
-  {
-    titulo: "Aprovado não se refaz",
-    texto: "O banco recusa gerar de novo um orçamento ou contrato que você já aprovou.",
-  },
-  {
-    titulo: "Pedido conferido",
-    texto: "Cada uma das 20 ferramentas do agente valida o que recebe. Pedido inválido não executa.",
-  },
-  {
-    titulo: "Limites de uso",
-    texto: "No máximo 8 etapas por pedido e um teto diário de uso por conta, para o custo não fugir do controle.",
-  },
-  {
-    titulo: "Tudo fica registrado",
-    texto: "Cada ação do agente e cada decisão sua entram no histórico, com autor e resultado.",
-  },
-  {
-    titulo: "Seus dados, sua decisão",
-    texto: "O agente acessa só o contexto do seu negócio. Você pode pedir a exclusão quando quiser.",
-  },
+  "Tudo começa como rascunho.",
+  "Você aprova, edita ou descarta.",
+  "Cada passo fica registrado.",
 ] as const;
 
-/** Linhas do histórico (`agente_acoes`) do exemplo do README §3. */
+/** O histórico do exemplo do README §3, em português e sem nome de função. */
 export const HISTORICO = [
-  { hora: "14:02", autor: "agente", acao: "registrar_servico", resultado: "ok" },
-  { hora: "14:02", autor: "agente", acao: "listar_dados_faltantes", resultado: "4 itens" },
-  { hora: "14:04", autor: "agente", acao: "gerar_orcamento", resultado: "rascunho" },
-  { hora: "14:04", autor: "agente", acao: "gerar_minuta_contrato", resultado: "rascunho" },
-  { hora: "14:04", autor: "agente", acao: "redigir_mensagem", resultado: "rascunho" },
-  { hora: "14:06", autor: "você", acao: "aprovar orçamento #012", resultado: "aprovado" },
-  { hora: "14:06", autor: "você", acao: "aprovar mensagem", resultado: "aprovado" },
+  { autor: "Agente", acao: "Preparou o orçamento #012", estado: "rascunho" },
+  { autor: "Agente", acao: "Escreveu a mensagem para a Maria", estado: "rascunho" },
+  { autor: "Você", acao: "Aprovou o orçamento", estado: "aprovado" },
+  { autor: "Você", acao: "Aprovou a mensagem", estado: "aprovado" },
 ] as const;
 
 /** README, Equipe. */
