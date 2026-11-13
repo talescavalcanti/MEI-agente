@@ -21,7 +21,11 @@ const TIPO: Record<CartaoRef["tipo"], string> = {
   orcamento: "Orçamento",
   contrato: "Contrato",
   mensagem: "Mensagem",
+  nota: "Nota fiscal",
 };
+
+/** Cartão de item que esta tela já sabe mostrar (orçamento, minuta, mensagem). */
+type CartaoItemRef = CartaoRef & { tipo: Exclude<CartaoRef["tipo"], "nota"> };
 
 /**
  * Cartão de aprovação de um orçamento, minuta ou mensagem.
@@ -35,6 +39,20 @@ const TIPO: Record<CartaoRef["tipo"], string> = {
  * relido do banco, e é ele que passa a valer.
  */
 export default function Cartao({ cartao, inicial }: { cartao: CartaoRef; inicial?: CartaoDados }) {
+  // Nota fiscal: por enquanto só o aviso. O cartão completo (campos, avisos,
+  // aprovar, registrar emissão) e a página Notas chegam na Task 17d.
+  if (cartao.tipo === "nota") {
+    return (
+      <article className="card">
+        <p className="text-caption text-muted">{TIPO.nota}</p>
+        <p className="mt-1 text-body-sm">Nota fiscal preparada. Confira e aprove na página Notas.</p>
+      </article>
+    );
+  }
+  return <CartaoItem cartao={cartao as CartaoItemRef} inicial={inicial} />;
+}
+
+function CartaoItem({ cartao, inicial }: { cartao: CartaoItemRef; inicial?: CartaoDados }) {
   const [dados, setDados] = useState<CartaoDados | null>(inicial ?? null);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
