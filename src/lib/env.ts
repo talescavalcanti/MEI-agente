@@ -35,9 +35,6 @@ export const env = {
   supabaseUrl: required("SUPABASE_URL"),
   supabaseServiceKey: required("SUPABASE_SERVICE_ROLE_KEY"),
 
-  // URL pública do app (ex.: https://mei-agente.vercel.app), sem barra no fim
-  appUrl: required("APP_URL").replace(/\/$/, ""),
-
   // Segredo simples pra proteger endpoints internos (agendador do pg_cron)
   cronSecret: required("CRON_SECRET"),
 
@@ -53,18 +50,3 @@ export const env = {
   // Teto de tokens por MEI por dia (controle de custo, README §9).
   limiteDiarioTokens: positiveInt("AGENTE_LIMITE_DIARIO_TOKENS", 400_000),
 };
-
-/**
- * `appUrl` só quando é um endereço que gente de fora consegue abrir: https e
- * fora de localhost. É o único que pode ir DENTRO de uma mensagem ou de uma
- * prévia de link (metadataBase).
- *
- * No meu-chat o APP_URL de produção já ficou `http://localhost:3000` (copiado
- * do .env.local) e os links saíram quebrados. Com este filtro, config errada
- * vira "sem link", nunca um link que não abre no celular de ninguém.
- */
-export const publicAppUrl: string | null =
-  /^https:\/\//i.test(env.appUrl) &&
-  !/^https:\/\/(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/i.test(env.appUrl)
-    ? env.appUrl
-    : null;
