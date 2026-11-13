@@ -24,7 +24,13 @@ O builder confere na documentação oficial do Emissor Nacional / NFS-e padrão 
 5. Obrigatoriedade de nota para tomador **pessoa física** e **pessoa jurídica** no caso do MEI.
 6. Campos novos da reforma tributária (IBS/CBS) no layout de 2026 que afetem a conferência do XML.
 
-Se algum item contradisser este plano, **pare e avise o orquestrador** antes de implementar. Valores "a confirmar" abaixo ficam numa função única (`fiscal_parametros()`), nunca espalhados.
+Se algum item contradisser este plano, **pare e avise o orquestrador** antes de implementar. Valores "a confirmar" abaixo ficam numa função única (`fiscal_parametros(p_ano)`), nunca espalhados.
+
+**Resultado do Step 0 (17a, 13/11/2026):**
+- **Limite do MEI muda por ano (LC 238, de 21/10/2026):** até 2026 R$ 81.000; 2027 R$ 110.000; a partir de 2028 R$ 140.000. Regra dos 20% inalterada: até 20% de excesso o MEI segue no ano e desenquadra em 1/1 do ano seguinte, com DAS complementar; acima de 20%, desenquadramento retroativo a 1/1 (ou à abertura). Limite proporcional do 1º ano de atividade fica fora (não há data de abertura do CNPJ no banco): pendência.
+- **Cancelamento/substituição:** não há prazo nacional; cada município define. Erro de valor ou de tomador não se corrige por substituição: exige cancelar e emitir outra.
+- **Obrigatoriedade (Res. CGSN 140/2018, art. 106):** MEI dispensado para consumidor final pessoa física (salvo se pedir); obrigatória para PJ (salvo nota de entrada do destinatário). Confirma `tarefas_gerar_notas` só para PJ.
+- **IBS/CBS (NTs 007 a 009/2026):** grupo não exigido do MEI em 2026; os campos que conferimos não mudam.
 
 ## Review Focus
 
@@ -68,7 +74,7 @@ tests/sql/fiscal.test.ts, tests/fiscal/{documento,xml}.test.ts, tests/fiscal/fix
   - `tarefas.tipo` passa a aceitar `'emitir_nota'` e `'corrigir_nota'`; `tarefas.servico_id` continua obrigatório
   - `mensagens.objetivo` passa a aceitar `'envio_nota'`; `mensagens` + `nota_id uuid references notas_fiscais on delete set null`
 - Produces (novo):
-  - `fiscal_parametros() → jsonb` — `{limite_anual, tolerancia_excesso, dias_para_emitir, dias_duplicata}`; valores do Step 0 (iniciais: `81000`, `0.20`, `5`, `30`, a confirmar)
+  - `fiscal_parametros(p_ano int default null) → jsonb` — `{ano, limite_anual, tolerancia_excesso, dias_para_emitir, dias_duplicata}`; `p_ano` nulo = ano de hoje (SP); limite `≤2026: 81000`, `2027: 110000`, `≥2028: 140000`; tolerância `0.20`; `5` e `30` dias. `faturamento_ano` e `nota_preparar` passam o ano da competência
   - `documento_valido(p_doc text) → text` — devolve os dígitos se CPF (11) ou CNPJ (14) tiver dígitos verificadores corretos e não for sequência repetida; senão `null`
   - `mei_dados_fiscais_salvar(p_mei, p_dados jsonb) → meis` — `{cnpj, inscricao_municipal, municipio, codigo_tributacao, nbs, descricao_padrao_nota}`; `cnpj` inválido → `regra: CNPJ do negócio inválido`; campo ausente não apaga
   - `cliente_documento_salvar(p_mei, p_cliente, p_documento) → clientes` — inválido → `regra: CPF ou CNPJ inválido`; já usado por outro cliente do MEI → `regra: já existe outro cliente com esse CPF/CNPJ`
@@ -161,7 +167,7 @@ tests/sql/fiscal.test.ts, tests/fiscal/{documento,xml}.test.ts, tests/fiscal/fix
 Comportamento:
 - **Cartão de nota (rascunho):** campos na ordem do Emissor Nacional, cada um com botão **[Copiar]**: tomador (documento formatado e nome), competência, código de tributação, NBS, município, descrição, valor. Avisos em âmbar com caixa "Conferi os avisos" que habilita **[Aprovar]**. **[Descartar]**. Sem edição de valor no cartão: valor errado se corrige no serviço e a nota é preparada de novo.
 - **Cartão aprovado:** link **[Abrir o Emissor Nacional]** (`https://www.nfse.gov.br/EmissorNacional`, conferir no Step 0) e **[Registrar emissão]** (anexar XML ou digitar número e valor).
-- **Cartão divergente:** vermelho, tabela "esperado × emitido" com cada diferença, e o texto "Cancele ou substitua a nota no Emissor Nacional dentro do prazo e registre de novo." (prazo do Step 0).
+- **Cartão divergente:** vermelho, tabela "esperado × emitido" com cada diferença, e o texto "Cancele ou substitua a nota no Emissor Nacional dentro do prazo do seu município e registre de novo. Erro de valor ou de cliente exige cancelar e emitir outra." (sem número de dias: o prazo é municipal).
 - **Cartão emitido:** número da nota, data, e **[Mandar para o cliente]** (abre o agente com o pedido de mensagem `envio_nota`).
 - **Meu negócio:** seção "Dados fiscais" (CNPJ, inscrição municipal, município, código de tributação e NBS com sugestões de `sugerirCodigos(mei.atividade)`, descrição padrão da nota). CNPJ validado com `documentoValido` antes de enviar.
 - **Página Notas** (menu "Notas", depois de "Documentos"): termômetro do ano no topo (barra com `percentual`, `faixa` em cor, total, com nota / sem nota, projeção, e o texto da faixa: em `excedido`/`excedido_grave`, explicar a consequência com o valor do Step 0 e sugerir procurar um contador); lista de notas com filtro por status (`Segmented`); notas a emitir (tarefas `emitir_nota`) com **[Preparar nota]**.
