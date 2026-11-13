@@ -175,7 +175,14 @@ const EXECUTORES: Record<string, (ctx: Ctx, e: Entrada) => Promise<Saida>> = {
       p_tipo: e.tipo,
     })) as ConhecimentoAchado[];
     // A relevância só ordena; não vale o contexto do modelo.
-    const resultados = achados.map(({ relevancia: _relevancia, ...item }) => item);
+    const resultados = achados.map((a) => ({
+      id: a.id,
+      tipo: a.tipo,
+      titulo: a.titulo,
+      conteudo: a.conteudo,
+      cliente_id: a.cliente_id,
+      cliente_nome: a.cliente_nome,
+    }));
     if (!resultados.length) {
       return { valor: { resultados, mensagem: "Nada encontrado na base de conhecimento. Não invente: pergunte ao usuário." } };
     }
