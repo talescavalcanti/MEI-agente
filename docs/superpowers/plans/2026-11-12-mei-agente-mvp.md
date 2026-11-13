@@ -115,11 +115,11 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 **Interfaces:**
 - Produces: `abrirBancoTeste(): Promise<BancoTeste>` com `BancoTeste = { rpc: Rpc; q(sql, params?): Promise<any[]>; fechar(): Promise<void> }` e `type Rpc = (nome: string, args?: Record<string, unknown>) => Promise<unknown>` (exportado de `src/lib/dominio/tipos.ts`, usado por todo o resto). `criarMei(b, nome?): Promise<string>` devolve `mei_id`.
 
-- [ ] **Step 1:** Teste: abrir o banco duas vezes seguidas sobre a mesma instância não lança (idempotência); `users` existe com índice único em `lower(email)`.
-- [ ] **Step 2:** Run `npx vitest run tests/sql/auth.test.ts`. Expected: FAIL (helper não existe).
-- [ ] **Step 3:** Implementar `banco.ts` portando `rpcPglite` do meu-chat (chamada por argumentos nomeados, retorno no formato do supabase-js). Carrega todos os `supabase/[0-8]*.sql` em ordem alfabética. `01-auth.sql` = `auth.sql` + `login-limite.sql` sem `ig_account_id`.
-- [ ] **Step 4:** Run de novo. Expected: PASS.
-- [ ] **Step 5:** Commit `test: banco de teste em PGlite e sql de auth`.
+- [x] **Step 1:** Teste: abrir o banco duas vezes seguidas sobre a mesma instância não lança (idempotência); `users` existe com índice único em `lower(email)`.
+- [x] **Step 2:** Run `npx vitest run tests/sql/auth.test.ts`. Expected: FAIL (helper não existe).
+- [x] **Step 3:** Implementar `banco.ts` portando `rpcPglite` do meu-chat (chamada por argumentos nomeados, retorno no formato do supabase-js). Carrega todos os `supabase/[0-8]*.sql` em ordem alfabética. `01-auth.sql` = `auth.sql` + `login-limite.sql` sem `ig_account_id`.
+- [x] **Step 4:** Run de novo. Expected: PASS.
+- [x] **Step 5:** Commit `test: banco de teste em PGlite e sql de auth`.
 
 ### Task 3: MEI e clientes
 
