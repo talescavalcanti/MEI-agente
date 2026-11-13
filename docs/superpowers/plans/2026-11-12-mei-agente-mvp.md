@@ -21,6 +21,7 @@
 - **Sem `APP_URL` (decidido em 13/11):** o app roda localmente e ainda não tem endereço público. `env.appUrl` e `publicAppUrl` saem do código e do `.env.example`; o campo `metadataBase` sai do layout. Volta no deploy (Task 16), se precisar.
 - **Modelo (decidido em 13/11):** `AGENTE_MODELO=google/gemma-4-31B-it` na Featherless (`tool_use` sim, contexto de **32k tokens**). Com 32k, o `llm.ts` precisa limitar o histórico reenviado às últimas N mensagens inteiras (nunca cortar entre chamada e resultado) e as descrições das ferramentas devem ser curtas.
 - **Funções de listagem das telas (Task 14)** ficam em `supabase/07-consultas.sql` (`cliente_listar`, `documentos_listar`, `mensagens_listar`), e não em `02`/`04`, para não conflitar com a Task 9, que mexe no `04-documentos.sql`.
+- **Tipos do agente (decidido em 13/11):** `Llm`, `Chamada`, `Motivo` e `Evento` ficam em `src/lib/agente/tipos.ts` (criado pela Task 9); `Cartao` e `ResultadoFerramenta` em `src/lib/agente/ferramentas/executar.ts`; `Ferramenta` e `FERRAMENTAS` em `ferramentas/definicoes.ts` (Task 8).
 - **Build:** `npm run build` exige as variáveis de ambiente (o `env.ts` valida na carga); para build local sem banco, usar um `.env.local` com valores fictícios, nunca commitado.
 - **SQL idempotente** (`create table if not exists`, `create or replace function`), RLS ligado e **sem políticas**, como no `meu-chat`.
 - **Valores e datas de documento nunca vêm do texto do modelo**: orçamento e minuta são renderizados por template a partir do banco.
@@ -277,9 +278,9 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 
 Regras do executor: validar `entrada` com o `esquema` da ferramenta (falha → `erro: true`, conteúdo `{"entrada_invalida": <mensagens do zod>}`); exceção com prefixo `regra:` → `erro: true` com a frase; qualquer outra exceção → `erro: true`, `"erro interno, tente de novo"` e `console.error`; ferramenta desconhecida → `erro: true`. `conteudo` é sempre JSON em string. `redigir_mensagem` acrescenta `aviso_valores` quando `valoresDivergentes` não é vazio.
 
-- [ ] **Step 1:** Testes (PGlite): cenário do README ponta a ponta só com `executarFerramenta` (criar cliente → registrar serviço fechado 800 → faltantes → completar → orçamento → minuta → mensagem) termina com 3 cartões e serviço `confirmado`; **Review Focus 3:** `gerar_orcamento` com `servico_id` aleatório → `erro: true`, texto contém "não encontrado", zero linhas em `orcamentos`; entrada sem campo obrigatório → `erro: true` com `entrada_invalida`; nome de ferramenta inexistente → `erro: true`; `FERRAMENTAS` não contém nenhuma com nome começando em `enviar`.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: ferramentas do agente`.
+- [x] **Step 1:** Testes (PGlite): cenário do README ponta a ponta só com `executarFerramenta` (criar cliente → registrar serviço fechado 800 → faltantes → completar → orçamento → minuta → mensagem) termina com 3 cartões e serviço `confirmado`; **Review Focus 3:** `gerar_orcamento` com `servico_id` aleatório → `erro: true`, texto contém "não encontrado", zero linhas em `orcamentos`; entrada sem campo obrigatório → `erro: true` com `entrada_invalida`; nome de ferramenta inexistente → `erro: true`; `FERRAMENTAS` não contém nenhuma com nome começando em `enviar`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: ferramentas do agente`.
 
 ### Task 9: Laço do agente, conversas, auditoria e limite de uso
 
@@ -299,15 +300,25 @@ Regras do executor: validar `entrada` com o `esquema` da ferramenta (falha → `
 
 Comportamento: checa `uso_hoje >= limiteDiario` antes de chamar o modelo (emite `erro` "Você atingiu o limite de uso de hoje."); grava a mensagem do usuário; a cada volta chama `llm.turno`, soma uso; `fim` → grava as mensagens do assistente e emite `fim`; `ferramentas` → executa todas as chamadas, grava **na mesma operação** as mensagens do assistente e a mensagem de `llm.resultado(...)` com todos os resultados, registra `agente_acoes`, emite `ferramenta`/`cartao`; `filtro`, `limite`, `outro` ou estouro de `MAX_VOLTAS` → não executa ferramentas daquela volta, não grava a volta incompleta, emite `erro`. Os cartões do turno vão no `cartoes` da última mensagem do assistente.
 
-- [ ] **Step 1:** Testes com `llmFalso(roteiro)`:
+- [x] **Step 1:** Testes com `llmFalso(roteiro)`:
   - texto simples → 2 linhas em `conversa_mensagens`, evento `fim`.
   - chamada de `registrar_servico` → `fim`: 4 linhas (usuário, assistente, resultados, assistente), 1 linha em `agente_acoes`, uso somado das duas voltas.
   - duas chamadas na mesma volta → **uma** mensagem de resultados com as duas.
   - as mensagens devolvidas por `turno` na volta 1 chegam à volta 2 idênticas (`deepEqual`), inclusive partes que o laço não entende.
   - **Review Focus 4:** `motivo: "filtro"` com chamadas no retorno → nenhuma ferramenta executada, evento `erro`, e a conversa relida tem toda chamada pareada com resultado; modelo que pede ferramenta para sempre → para em 8 voltas com `erro`, histórico pareado; `llm.turno` que lança → evento `erro`, mensagem do usuário preservada, próxima chamada de `rodarTurno` na mesma conversa funciona.
   - uso do dia acima do limite → `llm.turno` não é chamado.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: laco do agente com historico, auditoria e limite`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: laco do agente com historico, auditoria e limite`.
+- **Decisões da execução (PR #13), valem para T11, T13 e T15:**
+  - `conversa_anexar_varias(p_mei, p_conversa, p_mensagens jsonb)` grava assistente + resultados numa transação; `conversa_anexar` usa ela por dentro.
+  - Os cartões ficam no `cartoes` da mensagem do assistente **da volta que criou o item**, não só na última. Ao recarregar (T13), juntar os cartões de todas as linhas do assistente entre um `user` e o próximo e mostrar no fim do turno.
+  - `erro` não encerra o stream: `fim` sai sempre que há conversa válida, inclusive depois de erro, e traz o `conversaId`. Sem conversa (limite diário em conversa nova, conversa de outro MEI) não há `fim` e `rodarTurno` devolve `conversaId` vazio. `rodarTurno` nunca lança.
+  - Limite diário checado antes de gravar qualquer coisa; a mensagem do usuário não é gravada nesse caso.
+  - O título da conversa ignora o bloco `<contexto_do_negocio>`, então a T11 pode prefixá-lo ao texto antes de chamar `rodarTurno`.
+  - Mensagem de erro do `llm.turno` vai direto ao usuário: o `llm.ts` precisa lançar em português.
+  - `item_decidir` grava `agente_acoes` (tipo `decisao`) só quando o item mudou.
+  - Tipos `Conversa` e `ConversaMensagem` ficam em `src/lib/agente/conversas.ts`.
+  - Sem trava para dois turnos simultâneos na mesma conversa (duas abas): pendência conhecida.
 
 ### Task 10: Cliente do modelo, prompt e contexto
 
@@ -324,10 +335,11 @@ Comportamento: checa `uso_hoje >= limiteDiario` antes de chamar o modelo (emite 
 
 Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administrativo de MEI, tom direto e cordial, português do Brasil); ao receber um pedido, registrar o que já dá, conferir `listar_dados_faltantes` e perguntar tudo que falta **numa única mensagem**; buscar o cliente antes de criar; datas relativas resolvidas a partir de `hoje` do contexto e passadas como `AAAA-MM-DD`; nunca dizer que enviou algo: ele prepara rascunhos e o usuário decide nos cartões; não repetir no texto o conteúdo completo do que já está no cartão; minuta não é orientação jurídica; guardar com `salvar_memoria` preferências duradouras do negócio.
 
-- [ ] **Step 1:** Testes: `PROMPT_SISTEMA` não contém dígitos de ano nem o padrão `\d{4}-\d{2}-\d{2}`; `blocoContexto` contém a data de hoje, a atividade do MEI e cada memória; duas chamadas de `montarSystem()` são idênticas.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 1:** Testes: `PROMPT_SISTEMA` não contém dígitos de ano nem o padrão `\d{4}-\d{2}-\d{2}`; `blocoContexto` contém a data de hoje, a atividade do MEI e cada memória; duas chamadas de `montarSystem()` são idênticas.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
 - [ ] **Step 5:** `scripts/agente-smoke.ts`: roda as duas falas do README §3 contra a API real e um PGlite, imprime ferramentas chamadas, cartões e uso de tokens. **Gasta crédito: só rodar com o ok do dono.** Expected: 3 cartões, serviço `confirmado`, nenhuma ferramenta com `entrada_invalida`. É também o teste de aceitação do modelo escolhido: se ele não fechar este cenário, trocar `AGENTE_MODELO`.
-- [ ] **Step 6:** Commit `feat: cliente do modelo, prompt e contexto do negocio`.
+- [x] **Step 6:** Commit `feat: cliente do modelo, prompt e contexto do negocio`.
+- **Feito (PRs #11 e #15):** `limitarHistorico` (40 mensagens / 40 mil caracteres, corta sempre numa mensagem do usuário); `criarLlm({ streaming: false })` usa `generateText` como alternativa; todo erro sai em português como `ErroLlm`. Smoke: `JITI_ALIAS='{"@":"./src","server-only":"./tests/helpers/vazio.ts"}' npx jiti scripts/agente-smoke.ts --confirmo [--sem-streaming]`. **Step 5 (smoke real) pendente do ok do dono.** Se o uso vier 0 no smoke, ligar `includeUsage: true`.
 
 ### Task 11: Rota de chat com streaming
 
@@ -371,6 +383,7 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - [ ] **Step 2–4:** Run (FAIL) → implementar tudo → Run (PASS).
 - [ ] **Step 5:** Verificação manual com o cenário do README §3: as duas falas produzem 3 cartões; aprovar a mensagem libera "Copiar"; clique duplo em Aprovar não duplica nada; F5 mantém conversa e estados.
 - [ ] **Step 6:** Commit `feat: chat do agente com cartoes de aprovacao`.
+- **Parte A feita (PR #14):** `actions.ts`, `cartao-dados.ts`, `Cartao.tsx`, `EditarItem.tsx`, `tests/agente/cartao.test.ts`. As 4 actions devolvem `{ cartao: CartaoDados } | { erro: string }`. `<Cartao cartao={{tipo,id}} inicial?={CartaoDados} />`: sem `inicial`, chama `verItem` sozinho (serve para o stream e para o F5). **Falta a parte B:** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` (Steps 1 e 5).
 
 ### Task 14: Telas de consulta
 
