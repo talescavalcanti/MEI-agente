@@ -1,0 +1,1541 @@
+/* ==========================================================================
+   Landing page do MEIagente (/lp)
+   --------------------------------------------------------------------------
+   Sistema: LANDING-DESIGN-SYSTEM.md (meu-chat), o mesmo de onde o painel
+   herdou marca, sombras e easings. Os números citados (§) são de lá.
+
+   O que muda em relação ao documento, e por quê:
+
+   - Títulos na Fustat, não na Inter 300. A voz da marca do MEIagente é a
+     Fustat (globals.css). Em tamanho de display ela vai a 500, não 700: a
+     hierarquia continua sendo feita por escala e tracking (§0.1, §2.3), e o
+     peso cai conforme o título cresce.
+   - Corpo na Inter 400, não 300: corpo de 16px em 300 sobre #475569 fica
+     abaixo do contraste que o painel mede.
+   - Hero claro, sobre o cinza do painel (#f3f4f6), em vez do escuro com foto:
+     o MEIagente não tem fotografia própria, e o que vende é a tela do agente.
+     O escuro fica para a segurança e o fechamento (§0.6, "dois momentos").
+   - O selo da logo (paralelogramo a 19°) vira marcador: conta do trilho,
+     ponto das listas, marca do agente na conversa.
+   ========================================================================== */
+
+.lp {
+  --lp-gutter: clamp(1.25rem, 0.8rem + 2.2vw, 3rem);
+  --lp-section: clamp(5.5rem, 4rem + 6vw, 10rem);
+  --lp-ink: #07111f;
+  --lp-dark: #050b13;
+  --lp-brand: #0052ff;
+  --lp-selo: #1e64fe;
+  --lp-text: #475569;
+  --lp-muted: #64748b;
+  --lp-strong: #0f172a;
+  --lp-line: #cbd5e1;
+  --lp-card: #f7f9fc;
+  --lp-step: #f2f6ff;
+  --lp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --lp-ease-nav: cubic-bezier(0.5, 0, 0.2, 1);
+  --lp-skew: -19deg;
+
+  /* Tokens dos componentes do acervo (kit/tokens.css), na identidade daqui. */
+  --c-bg: #ffffff;
+  --c-fg: #0f172a;
+  --c-muted: #64748b;
+  --c-border: #cbd5e1;
+  --c-accent: #0052ff;
+  --c-font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  position: relative;
+  overflow: clip; /* §8: clip, não hidden, para não matar o sticky */
+  background: #fff;
+  color: var(--lp-text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+html:has(.lp) {
+  scroll-padding-top: 7rem;
+}
+
+/* Lenis (o pacote não injeta CSS). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lp-shell {
+  width: min(100%, 96rem);
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+.lp-section {
+  padding-block: var(--lp-section);
+}
+
+/* §6.5: a máscara de linha corta a perna de g/j/p/q/ç com line-height < 1. */
+.lp .lp-line {
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
+
+/* ------------------------------------------------------------ tipografia */
+
+.lp-display,
+.lp-h2,
+.lp-statement,
+.lp-final__titulo {
+  font-family: var(--font-heading);
+  color: var(--lp-ink);
+  text-wrap: balance;
+}
+
+.lp-display {
+  font-weight: 500;
+  font-size: clamp(2.6rem, 1.1rem + 5.6vw, 6.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+}
+
+.lp-h2 {
+  font-weight: 500;
+  font-size: clamp(2.3rem, 1.3rem + 3.3vw, 4.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  max-width: 16ch;
+}
+
+.lp-statement {
+  font-weight: 500;
+  font-size: clamp(1.85rem, 1rem + 2.9vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+  max-width: 24ch;
+}
+
+.lp-lead {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+  font-size: clamp(1rem, 0.95rem + 0.22vw, 1.13rem);
+  line-height: 1.65;
+  color: var(--lp-text);
+  text-wrap: pretty;
+}
+
+.lp-textlink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--lp-strong);
+}
+
+.lp-inline {
+  color: var(--lp-strong);
+  font-weight: 500;
+}
+
+.lp-nota {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--lp-muted);
+}
+
+.lp-chip {
+  flex-shrink: 0;
+  border-radius: 0.7rem;
+  background: #f6f7f9;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #475569;
+  white-space: nowrap;
+}
+.lp-chip[data-decisao="aprovado"],
+[data-decisao="aprovado"] > header .lp-chip {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+.lp-chip[data-decisao="descartado"],
+[data-decisao="descartado"] > header .lp-chip {
+  background: var(--color-danger-bg, rgba(255, 107, 107, 0.1));
+  color: #b91c1c;
+}
+
+/* ------------------------------------------------------------------- nav */
+
+.lp-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  padding: 1rem var(--lp-gutter) 0;
+  pointer-events: none;
+}
+
+.lp-nav__shell {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.2rem;
+  max-width: 94rem;
+  min-height: 4rem;
+  margin-inline: auto;
+  padding: 0.55rem 0.55rem 0.55rem 1rem;
+  border-radius: 1.35rem;
+  background-color: transparent;
+  outline: 1px solid transparent;
+  transition:
+    background-color 0.75s var(--lp-ease-nav),
+    box-shadow 0.75s var(--lp-ease-nav),
+    outline-color 0.75s var(--lp-ease-nav),
+    max-width 0.75s var(--lp-ease-nav);
+}
+
+/* §7.3: recolhida. A largura encolhe por classe (aqui não há scrub). */
+.lp-nav__shell.is-scrolled {
+  max-width: 60rem;
+  background-color: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.1);
+  outline-color: rgba(15, 23, 42, 0.07);
+}
+
+.lp-nav__brand {
+  justify-self: start;
+  display: inline-flex;
+  border-radius: 0.5rem;
+}
+
+.lp-nav__links {
+  display: flex;
+  gap: 1.7rem;
+  font-size: 0.8125rem;
+  color: rgba(8, 12, 20, 0.76);
+}
+.lp-nav__links a {
+  transition: color 0.25s;
+}
+
+.lp-nav__end {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lp-nav__login {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lp-strong);
+}
+
+@media (max-width: 47.5rem) {
+  .lp-nav {
+    padding-top: 0.75rem;
+  }
+  .lp-nav__shell {
+    grid-template-columns: 1fr auto;
+    min-height: 3.5rem;
+    border-radius: 1rem;
+    padding-left: 0.85rem;
+  }
+  .lp-nav__links {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.lp-hero {
+  position: relative;
+  background: #f3f4f6; /* o chão do painel */
+  padding-top: clamp(7.5rem, 5rem + 7vw, 11rem);
+  padding-bottom: clamp(4rem, 2rem + 6vw, 8rem);
+}
+
+/* A máscara desce 0.2em abaixo da linha (§6.5, §11.4): com line-height
+   0.94 ela cortava a cedilha de "serviço" e a perna do p de "papelada". */
+.lp-hero__line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
+.lp-hero__line > span {
+  display: block;
+  animation: lp-sobe 1.1s var(--lp-ease) both;
+}
+.lp-hero__line + .lp-hero__line > span {
+  animation-delay: 0.1s;
+}
+
+.lp-hero__accent {
+  font-style: normal;
+  color: var(--lp-brand);
+}
+
+.lp-hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: start;
+  margin-top: clamp(2rem, 1rem + 2.5vw, 3.5rem);
+}
+
+.lp-hero__copy {
+  animation: lp-entra 0.9s var(--lp-ease) 0.25s both;
+}
+.lp-hero__copy .lp-lead {
+  margin-top: 0;
+}
+
+.lp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.lp-hero__para {
+  margin-top: 1.75rem;
+  max-width: 26rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #475569; /* muted-on-tint: sobre o canvas o slate-500 não passa */
+}
+
+.lp-hero__demo {
+  animation: lp-entra 1s var(--lp-ease) 0.35s both;
+}
+
+@media (max-width: 62rem) {
+  .lp-hero__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-hero__demo {
+    max-width: 36rem;
+  }
+}
+
+@keyframes lp-sobe {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes lp-entra {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------- conversa de exemplo */
+
+.lp-demo {
+  border-radius: 1.75rem;
+  background: #fff;
+  padding: 0.75rem;
+  box-shadow:
+    0 42px 100px -40px rgba(0, 43, 136, 0.3),
+    0 20px 55px -32px rgba(15, 23, 42, 0.28);
+}
+
+.lp-demo__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.lp-demo__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  color: var(--lp-strong);
+}
+
+/* O selo da logo, pequeno: é a "cara" do agente na conversa. */
+.lp-demo__selo {
+  width: 1.05rem;
+  height: 0.8rem;
+  border-radius: 0.15rem;
+  background: var(--lp-selo);
+  transform: skewX(var(--lp-skew));
+}
+
+.lp-demo__tag {
+  font-size: 0.75rem;
+  color: var(--lp-muted);
+}
+
+.lp-demo__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-radius: 1.25rem;
+  background: #f6f7f9;
+  padding: 1rem;
+}
+
+.lp-demo__step {
+  animation: lp-entra 0.6s var(--lp-ease) var(--d, 0s) both;
+}
+
+.lp-bubble {
+  max-width: 85%;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--lp-strong);
+}
+.lp-bubble.dm-bubble {
+  align-self: flex-start;
+  background: #fff;
+}
+.lp-bubble--eu {
+  align-self: flex-end;
+  border-radius: 1rem 1rem 0.25rem 1rem;
+  background: var(--lp-brand);
+  color: #fff;
+}
+.lp-bubble--mini {
+  max-width: none;
+  font-size: 0.8125rem;
+}
+
+.lp-demo__count {
+  margin: 1rem 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--lp-muted);
+}
+
+/* A pilha: os três cartões na mesma célula. Os de trás aparecem por cima,
+   um degrau acima e menores; o decidido sai pela esquerda. */
+.lp-deck {
+  display: grid;
+  padding-top: 1.25rem;
+}
+
+.lp-deck__card {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 18px 44px -30px rgba(7, 17, 31, 0.3);
+  transform-origin: 50% 0;
+  transition:
+    transform 0.6s var(--lp-ease),
+    opacity 0.45s var(--lp-ease);
+}
+/* Mesma célula, mesma altura: a fileira de botões desce para o pé. */
+.lp-deck__card > :last-child {
+  margin-top: auto;
+}
+.lp-deck__card[data-pos="0"] {
+  z-index: 3;
+}
+.lp-deck__card[data-pos="1"] {
+  z-index: 2;
+  transform: translateY(-0.65rem) scale(0.96);
+}
+.lp-deck__card[data-pos="2"] {
+  z-index: 1;
+  transform: translateY(-1.25rem) scale(0.92);
+}
+.lp-deck__card[data-pos="1"] > *,
+.lp-deck__card[data-pos="2"] > * {
+  visibility: hidden;
+}
+.lp-deck__card[data-pos="saindo"] {
+  z-index: 4;
+  transform: translateX(-108%) rotate(-5deg);
+  opacity: 0;
+  transition-delay: 0.2s;
+}
+.lp-deck__card[data-pos="fora"] {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.lp-resumo {
+  margin-top: 1rem;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 18px 44px -30px rgba(7, 17, 31, 0.3);
+  animation: lp-entra 0.6s var(--lp-ease) both;
+}
+
+/* -------------------------------------------------------------- problema */
+
+.lp-problema__dados {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 2rem clamp(2rem, 5vw, 6rem);
+  margin-top: clamp(3.5rem, 2rem + 4vw, 6rem);
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.lp-problema__intro {
+  max-width: 24rem;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.lp-numeros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.lp-numero__valor {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 2rem + 3.6vw, 5.5rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--lp-ink);
+}
+.lp-numero__valor .roller {
+  height: 1em;
+}
+
+.lp-numero p {
+  margin-top: 1rem;
+  max-width: 17rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.lp-fonte-ref {
+  margin-left: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--lp-brand);
+}
+
+.lp-fontes {
+  grid-column: 2;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--lp-muted);
+}
+
+@media (max-width: 62rem) {
+  .lp-problema__dados {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-fontes {
+    grid-column: 1;
+  }
+}
+@media (max-width: 40rem) {
+  .lp-numeros {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.25rem;
+  }
+}
+
+/* --------------------------------------------- como funciona (process rail) */
+
+.lp-etapas {
+  background: var(--lp-step);
+  --c-bg: var(--lp-step);
+}
+
+.lp-etapas .prl_wrap {
+  font-weight: 400;
+  color: var(--lp-strong);
+}
+
+.lp-etapas .prl_stage {
+  padding: clamp(5rem, 4rem + 4vw, 8rem) var(--lp-gutter) 3rem;
+  align-content: center;
+  gap: clamp(2.5rem, 2rem + 3vw, 5rem);
+}
+
+/* O palco já tem o gutter; sem o teto de 1280px do componente, título e
+   trilho alinham com a margem das outras seções. */
+.lp-etapas__head,
+.lp-etapas .prl_rail {
+  width: 100%;
+  max-width: calc(96rem - 2 * var(--lp-gutter));
+  margin: 0 auto;
+}
+.lp-etapas__head .lp-h2 {
+  font-size: clamp(2.1rem, 1.3rem + 2.4vw, 3.6rem);
+}
+.lp-etapas__head .lp-lead {
+  max-width: 30rem;
+}
+
+/* A conta é o selo da logo. O motor move a caixa por transform; a
+   inclinação fica no pseudo, para não brigar com ele. */
+.lp-etapas .prl_bead {
+  width: 16px;
+  height: 12px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+.lp-etapas .prl_bead::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: var(--lp-selo);
+  transform: skewX(var(--lp-skew));
+  box-shadow: 0 0 0 5px var(--lp-step);
+}
+
+.lp-etapas .prl_path {
+  stroke: var(--lp-brand);
+  opacity: 1;
+}
+.lp-etapas .prl_path_ghost {
+  stroke: #64748b;
+  opacity: 0.55;
+}
+
+.lp-etapas .prl_step_num {
+  font-size: 0.8125rem;
+  color: var(--lp-brand);
+}
+
+.lp-etapas .prl_step_title {
+  margin-top: 0.9rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.15rem, 1rem + 0.5vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--lp-ink);
+}
+
+.lp-etapas .prl_step_text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--lp-text);
+}
+
+.lp-etapas .prl_step_media {
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  margin-top: 1.25rem;
+  overflow: visible;
+}
+
+.lp-etapas .prl_step_btn:focus-visible {
+  outline: 2px solid var(--lp-brand);
+  outline-offset: 6px;
+}
+
+@media (max-width: 47.9375rem) {
+  .lp-etapas .prl_stage {
+    padding-inline: var(--lp-gutter);
+    padding-bottom: var(--lp-section);
+  }
+  .lp-etapas .prl_rail {
+    padding-left: 2.75rem;
+  }
+  .lp-etapas .prl_svg_mobile {
+    width: 2.75rem;
+  }
+  .lp-etapas .prl_steps {
+    grid-auto-rows: auto;
+  }
+  .lp-etapas .prl_step_media {
+    min-height: 0;
+  }
+}
+
+/* Pequenas provas de cada etapa. */
+.lp-mini {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.lp-mini__chip {
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.45rem 0.75rem;
+  color: var(--lp-strong);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.lp-mini--lista {
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.lp-mini--lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--lp-text);
+}
+.lp-mini--lista li::before {
+  content: "";
+  flex: none;
+  width: 0.7rem;
+  height: 0.55rem;
+  border-radius: 1px;
+  outline: 1.5px dashed #94a3b8;
+  outline-offset: -1.5px;
+  transform: skewX(var(--lp-skew));
+}
+.lp-mini--lista li[data-ok] {
+  color: var(--lp-strong);
+}
+.lp-mini--lista li[data-ok]::before {
+  outline: none;
+  background: var(--lp-selo);
+}
+
+.lp-mini--docs {
+  flex-direction: column;
+  gap: 0;
+}
+.lp-mini--docs li {
+  border-radius: 0.7rem;
+  background: #fff;
+  padding: 0.55rem 0.75rem;
+  color: var(--lp-strong);
+  box-shadow: 0 10px 24px -18px rgba(7, 17, 31, 0.5);
+}
+.lp-mini--docs li + li {
+  margin-top: -0.2rem;
+  margin-left: 0.6rem;
+}
+
+.lp-mini--botoes {
+  gap: 0.35rem;
+}
+.lp-mini__btn {
+  border-radius: 0.7rem;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  color: var(--lp-text);
+}
+.lp-mini__btn--sim {
+  background: var(--lp-brand);
+  color: #fff;
+}
+
+/* -------------------------------------------------------------- o que faz */
+
+.lp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: end;
+  gap: 2rem;
+}
+.lp-head .lp-lead {
+  margin-top: 0;
+  justify-self: end;
+}
+@media (max-width: 62rem) {
+  .lp-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-head .lp-lead {
+    justify-self: start;
+  }
+}
+
+/* Quatro cartões em xadrez (7+5 / 5+7): mesma família (§7.5), larguras
+   diferentes, para a seção não virar a fileira de três cartões iguais. */
+.lp-faz__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+}
+
+.lp-feat {
+  display: flex;
+  flex-direction: column;
+  min-height: 30rem;
+  border-radius: 1.75rem;
+  background: var(--lp-card);
+  padding: 1.75rem;
+  box-shadow:
+    0 18px 44px -30px rgba(7, 17, 31, 0.3),
+    0 1px 2px rgba(7, 17, 31, 0.03);
+}
+@media (hover: hover) {
+  .lp-feat {
+    transition:
+      translate 0.62s var(--lp-ease),
+      box-shadow 0.62s var(--lp-ease);
+  }
+  .lp-feat:hover {
+    translate: 0 -4px;
+    box-shadow:
+      0 30px 60px -34px rgba(7, 17, 31, 0.34),
+      0 1px 2px rgba(7, 17, 31, 0.03);
+  }
+}
+
+.lp-feat--a {
+  grid-column: span 7;
+}
+.lp-feat--b {
+  grid-column: span 5;
+}
+.lp-feat--c {
+  grid-column: span 5;
+}
+.lp-feat--d {
+  grid-column: span 7;
+}
+
+.lp-feat__path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+  color: #64748b;
+}
+
+.lp-feat__title {
+  margin-top: 0.9rem;
+  max-width: 18ch;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 1.1rem + 0.75vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--lp-ink);
+}
+
+.lp-feat__art {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin-block: 2rem;
+}
+
+.lp-feat__body {
+  max-width: 34rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 62rem) {
+  .lp-feat--a,
+  .lp-feat--b,
+  .lp-feat--c,
+  .lp-feat--d {
+    grid-column: span 12;
+  }
+  .lp-feat {
+    min-height: 0;
+  }
+}
+@media (max-width: 47.5rem) {
+  .lp-feat {
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+  }
+}
+
+/* Artefato A: o orçamento na frente, o contrato atrás. */
+.lp-art-doc {
+  grid-area: 1 / 1;
+  width: min(100%, 22rem);
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1rem 1.1rem;
+  font-size: 0.8rem;
+  color: var(--lp-text);
+  box-shadow: 0 22px 54px -30px rgba(7, 17, 31, 0.4);
+  translate: -0.75rem 0.5rem;
+  rotate: -1.2deg;
+  z-index: 1;
+}
+.lp-art-doc p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.35rem;
+}
+.lp-art-doc p span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+.lp-art-doc__head {
+  font-weight: 600;
+  color: var(--lp-strong);
+}
+.lp-art-doc__total {
+  margin-top: 0.35rem;
+  border-top: 1px solid #e7e9ee;
+  padding-top: 0.6rem !important;
+  font-weight: 600;
+  color: var(--lp-strong);
+}
+.lp-art-doc--atras {
+  z-index: 0;
+  translate: 1.75rem -3.4rem;
+  rotate: 2.5deg;
+  background: #fff;
+  opacity: 0.9;
+}
+.lp-art-doc__assinatura {
+  margin-top: 4.5rem;
+}
+.lp-art-doc__assinatura span {
+  display: block;
+  width: 40%;
+  height: 1px;
+  background: #94a3b8;
+}
+
+/* Artefato B: o lembrete. */
+.lp-art-lembrete {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(100%, 22rem);
+}
+.lp-art-lembrete__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--lp-text);
+}
+.lp-art-lembrete__dias {
+  border-radius: 0.7rem;
+  background: var(--color-warn-bg, rgba(245, 158, 11, 0.12));
+  padding: 0.1rem 0.5rem;
+  color: #78350f;
+}
+.lp-art-lembrete .lp-bubble {
+  background: #fff;
+}
+
+/* Artefato C: os estados do serviço. */
+.lp-art-etapas {
+  display: grid;
+  gap: 0.3rem;
+  width: min(100%, 18rem);
+  font-size: 0.8rem;
+}
+.lp-art-etapas li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 0.7rem;
+  padding: 0.4rem 0.75rem;
+  color: #94a3b8;
+}
+.lp-art-etapas li::before {
+  content: "";
+  flex: none;
+  width: 0.65rem;
+  height: 0.5rem;
+  border-radius: 1px;
+  background: #cbd5e1;
+  transform: skewX(var(--lp-skew));
+}
+.lp-art-etapas li[data-feito] {
+  color: var(--lp-text);
+}
+.lp-art-etapas li[data-feito]::before {
+  background: #93b4ff;
+}
+.lp-art-etapas li[data-atual] {
+  background: var(--lp-brand);
+  color: #fff;
+  box-shadow: 0 14px 30px -18px rgba(0, 82, 255, 0.75);
+}
+.lp-art-etapas li[data-atual]::before {
+  background: #fff;
+}
+
+/* Artefato D: a nota e o termômetro. */
+.lp-art-nota {
+  display: grid;
+  gap: 0.65rem;
+  width: min(100%, 24rem);
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1.1rem;
+  font-size: 0.8rem;
+  box-shadow: 0 22px 54px -30px rgba(7, 17, 31, 0.4);
+}
+.lp-art-nota__linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--lp-strong);
+}
+.lp-art-nota__linha .lp-chip {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+.lp-art-nota__rotulo {
+  color: var(--lp-text);
+}
+.lp-art-nota__barra {
+  display: block;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: #eef0f4;
+  overflow: hidden;
+}
+.lp-art-nota__barra span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0052ff, #7cc2ff);
+}
+
+/* ------------------------------------------------------------ comparação */
+
+.lp-comp {
+  background: #f3f4f6;
+}
+
+.lp-comp__wrap {
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+  overflow-x: auto;
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow: 0 18px 44px -30px rgba(7, 17, 31, 0.3);
+}
+.lp-comp__wrap:focus-visible {
+  outline: 2px solid var(--lp-brand);
+  outline-offset: 3px;
+}
+
+.lp-comp__tabela {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.lp-comp__tabela th,
+.lp-comp__tabela td {
+  padding: 1.05rem 1.25rem;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #e7e9ee;
+}
+.lp-comp__tabela thead th,
+.lp-comp__tabela thead td {
+  border-top: 0;
+  padding-top: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lp-muted);
+  vertical-align: bottom;
+}
+.lp-comp__tabela tbody th {
+  width: 30%;
+  font-weight: 500;
+  color: var(--lp-strong);
+}
+.lp-comp__tabela td {
+  color: var(--lp-text);
+}
+
+/* A coluna do MEIagente é uma faixa azul que desce a tabela inteira. */
+.lp-comp__tabela [data-nosso] {
+  background: var(--lp-brand);
+  color: #fff;
+  font-weight: 500;
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
+.lp-comp__tabela thead [data-nosso] {
+  border-radius: 1.1rem 1.1rem 0 0;
+}
+.lp-comp__tabela thead [data-nosso] .wordmark {
+  color: #fff;
+  --wordmark-selo: #fff;
+  --wordmark-selo-letras: var(--lp-brand);
+}
+.lp-comp__tabela tbody tr:last-child [data-nosso] {
+  border-radius: 0 0 1.1rem 0;
+}
+
+/* No celular a tabela vira uma lista por pergunta, com a resposta do
+   MEIagente primeiro: no scroll lateral ela ficava fora da tela. */
+@media (max-width: 47.5rem) {
+  .lp-comp__wrap {
+    overflow: visible;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .lp-comp__tabela,
+  .lp-comp__tabela tbody {
+    display: block;
+    min-width: 0;
+  }
+  .lp-comp__tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .lp-comp__tabela tbody tr {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 1.25rem;
+    background: #fff;
+    padding: 1.1rem;
+    box-shadow: 0 18px 44px -30px rgba(7, 17, 31, 0.3);
+  }
+  .lp-comp__tabela tbody th,
+  .lp-comp__tabela td {
+    width: auto;
+    border: 0;
+    padding: 0;
+  }
+  .lp-comp__tabela tbody th {
+    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+  }
+  .lp-comp__tabela td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8125rem;
+  }
+  .lp-comp__tabela td::before {
+    content: attr(data-col);
+    color: var(--lp-muted);
+    font-weight: 400;
+  }
+  .lp-comp__tabela td[data-nosso] {
+    order: -1;
+    border-radius: 0.7rem;
+    padding: 0.55rem 0.75rem;
+  }
+  .lp-comp__tabela td[data-nosso]::before {
+    color: #dde7ff;
+  }
+  .lp-comp__tabela tbody tr:last-child [data-nosso] {
+    border-radius: 0.7rem;
+  }
+  .lp-comp__tabela tbody th {
+    order: -2;
+  }
+}
+
+/* ------------------------------------------------------------- segurança */
+
+.lp-seg {
+  padding-block: clamp(1.5rem, 3vw, 3rem);
+}
+
+.lp-cutout {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 4rem;
+  border-radius: 3rem;
+  padding: clamp(2rem, 6vw, 6rem);
+  background:
+    radial-gradient(circle at 85% 100%, rgba(0, 82, 255, 0.31), transparent 48%),
+    radial-gradient(circle at 0 0, rgba(54, 158, 255, 0.18), transparent 42%),
+    var(--lp-dark);
+  color: #cbd5e1;
+  box-shadow: 0 32px 90px -50px rgba(0, 43, 136, 0.75);
+}
+
+.lp-cutout .lp-h2 {
+  color: #f3f6ff;
+  max-width: 12ch;
+}
+
+.lp-cutout__lead {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.lp-garantias {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2rem;
+  margin-top: 2.5rem;
+}
+.lp-garantias li {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-block: 1.1rem 1.4rem;
+}
+.lp-garantias h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #f3f6ff;
+}
+.lp-garantias h3::before {
+  content: "";
+  flex: none;
+  width: 0.7rem;
+  height: 0.55rem;
+  border-radius: 1px;
+  background: #7cc2ff;
+  transform: skewX(var(--lp-skew));
+}
+.lp-garantias p {
+  margin-top: 0.45rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #b8c4d6;
+}
+
+.lp-log {
+  align-self: center;
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  outline: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+}
+.lp-log__cap {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.25rem 0.9rem;
+  color: #94a3b8;
+}
+.lp-log__linhas {
+  display: grid;
+  gap: 0.25rem;
+}
+.lp-log__linhas li {
+  display: grid;
+  grid-template-columns: 3.2rem 3.6rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: baseline;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  color: #cbd5e1;
+}
+.lp-log__linhas li[data-autor="você"] {
+  background: rgba(0, 82, 255, 0.22);
+  color: #fff;
+}
+.lp-log__hora {
+  color: #8796ad;
+}
+.lp-log__autor {
+  color: #7cc2ff;
+}
+.lp-log__acao {
+  overflow-wrap: anywhere;
+}
+.lp-log__res {
+  color: #a7f3d0;
+}
+.lp-log__linhas li:not([data-autor="você"]) .lp-log__res {
+  color: #b8c4d6;
+}
+.lp-log__aviso {
+  margin-top: 1rem;
+  padding: 0 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: #b8c4d6;
+}
+
+@media (max-width: 68.75rem) {
+  .lp-cutout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 47.5rem) {
+  .lp-cutout {
+    border-radius: 2rem;
+    padding: 2.5rem 1.4rem 2rem;
+  }
+  .lp-garantias {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-log__linhas li {
+    grid-template-columns: 2.9rem minmax(0, 1fr);
+    row-gap: 0.15rem;
+  }
+  .lp-log__autor {
+    display: none;
+  }
+  .lp-log__res {
+    grid-column: 2;
+  }
+}
+
+/* ---------------------------------------------------------------- equipe */
+
+.lp-equipe__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 3rem clamp(3rem, 8vw, 9rem);
+  align-items: start;
+}
+
+.lp-equipe__lista {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2.5rem;
+}
+.lp-equipe__lista li {
+  border-top: 1px solid var(--lp-line);
+  padding-block: 1.4rem 2rem;
+}
+.lp-equipe__nome {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--lp-ink);
+}
+.lp-equipe__papel {
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  color: var(--lp-brand);
+}
+.lp-equipe__texto {
+  margin-top: 0.8rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 62rem) {
+  .lp-equipe__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .lp-equipe__lista {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------- perguntas */
+
+.lp-faq {
+  padding-top: 0;
+}
+
+.lp-faq__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+  gap: 3rem clamp(3rem, 8vw, 9rem);
+  align-items: start;
+}
+
+.lp-faq__intro {
+  position: sticky;
+  top: 8rem;
+}
+
+.lp .lp-faq__lista {
+  border-top: 1px solid var(--lp-line);
+}
+.lp .lp-faq__lista .accordion_item {
+  border-bottom-color: var(--lp-line);
+}
+.lp .lp-faq__lista .accordion_trigger {
+  gap: 1.5rem;
+  min-height: 5.2rem;
+  padding: 1.25rem 0;
+  color: var(--lp-strong);
+}
+.lp .lp-faq__lista .accordion_trigger:hover,
+.lp .lp-faq__lista .accordion_trigger[aria-expanded="true"] {
+  color: var(--lp-brand);
+}
+.lp .lp-faq__lista .accordion_title {
+  font-size: clamp(0.98rem, 0.9rem + 0.35vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.lp .lp-faq__lista .accordion_text {
+  max-width: 38rem;
+  padding-bottom: 1.6rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--lp-text);
+}
+
+@media (max-width: 62rem) {
+  .lp-faq__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-faq__intro {
+    position: static;
+  }
+}
+
+/* ------------------------------------------------- fechamento e rodapé */
+
+/* §7.10: final e rodapé leem como uma seção contínua no mesmo preto. */
+.lp-dark {
+  background: var(--lp-dark);
+  color: #cbd5e1;
+}
+
+.lp-final {
+  padding-top: clamp(6rem, 12vw, 12rem);
+  padding-bottom: 3rem;
+}
+
+.lp-final__titulo {
+  max-width: 20ch;
+  font-weight: 500;
+  font-size: clamp(2.6rem, 1.2rem + 5vw, 6.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+  color: #f3f6ff;
+}
+.lp-final__titulo span {
+  color: #369eff;
+}
+
+.lp-final__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.lp-dark .lp-textlink {
+  color: #f3f6ff;
+}
+.lp-dark .text-link:hover {
+  color: #7cc2ff;
+}
+.lp-dark :focus-visible {
+  outline-color: #fff;
+}
+
+.lp-footer {
+  padding-top: 3rem;
+  overflow: hidden;
+}
+
+.lp-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-block: 2rem;
+}
+
+.lp-footer__marca p {
+  margin-top: 1rem;
+  max-width: 22rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #b8c4d6;
+}
+
+.lp-wordmark-dark {
+  color: #fff;
+}
+
+.lp-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem clamp(2rem, 5vw, 5rem);
+  font-size: 0.8125rem;
+}
+.lp-footer__links ul {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+}
+.lp-footer__links a {
+  color: #e2e8f0;
+}
+
+.lp-footer__row--legal {
+  font-size: 0.75rem;
+  color: #8796ad;
+}
+
+.lp .lp-footer__mark {
+  /* "MEIagente" mede ~5em nesta fonte: 18vw deixa a marca em ~92% da tela. */
+  --watermark-size: min(18vw, 19rem);
+  --watermark-opacity: 0.09;
+  justify-content: center;
+  gap: 0;
+  margin-top: 1rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #fff;
+  line-height: 0.78;
+}
+
+/* ------------------------------------------------------- menos movimento */
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero__line > span,
+  .lp-hero__copy,
+  .lp-hero__demo,
+  .lp-demo__step,
+  .lp-resumo {
+    animation: none;
+  }
+  .lp-deck__card {
+    transition: opacity 0.2s;
+  }
+  .lp-deck__card[data-pos="saindo"] {
+    transform: none;
+  }
+  .lp-nav__shell {
+    transition-duration: 0.2s;
+  }
+  /* Sem a timeline do acordeão, o "+" vira "−" por estado. */
+  .lp .accordion_trigger[aria-expanded="true"] [data-anm-accordion-icon-vertical] {
+    opacity: 0;
+  }
+}
