@@ -16,6 +16,7 @@ import {
   NUMEROS,
   PERGUNTAS,
 } from "./conteudo";
+import DemoVideo from "./DemoVideo";
 import HeroDemo from "./HeroDemo";
 import MarcaRodape from "./MarcaRodape";
 import Motion from "./Motion";
@@ -49,6 +50,7 @@ export default function LandingPage() {
 
       <main>
         <Hero />
+        <Demonstracao />
         <Problema />
         <ComoFunciona />
         <OQueFaz />
@@ -99,6 +101,29 @@ function Hero() {
           <div className="lp-hero__demo">
             <HeroDemo />
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------- demonstração */
+
+function Demonstracao() {
+  return (
+    <section id="demonstracao" className="lp-section lp-demovid" aria-labelledby="lp-demovid-titulo">
+      <div className="lp-shell">
+        <div className="lp-head">
+          <h2 id="lp-demovid-titulo" className="lp-h2" data-line-reveal>
+            Veja o agente trabalhando.
+          </h2>
+          <p className="lp-lead" data-reveal>
+            Cinco minutos no painel de um MEI de demonstração: a conversa com o agente, clientes e serviços por
+            etapa, as propostas paradas e os dados da nota fiscal.
+          </p>
+        </div>
+        <div className="lp-demovid__palco" data-reveal>
+          <DemoVideo />
         </div>
       </div>
     </section>

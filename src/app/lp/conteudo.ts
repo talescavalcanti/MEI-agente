@@ -7,6 +7,7 @@
  */
 
 export const NAV = [
+  { href: "#demonstracao", label: "Demonstração" },
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#seguranca", label: "Segurança" },
   { href: "#perguntas", label: "Perguntas" },
@@ -145,3 +146,16 @@ export const PERGUNTAS = [
     text: "O MEIagente está em fase de MVP, construído no AKCIT Camp 2026. O preço ainda não foi definido; a meta é um valor acessível para quem trabalha sozinho.",
   },
 ] as const;
+
+/**
+ * Vídeo da demonstração (o mesmo do README), tocado direto do link público,
+ * sem cópia no projeto. Duração e tamanho medidos com `ffprobe` no link; a
+ * duração é só o valor inicial, o player troca pela do arquivo ao carregar.
+ */
+export const VIDEO_DEMO = {
+  src: "https://pub-544e5cb5fea74a52aaeb7059bd01a459.r2.dev/meiagente-video-compressed.mp4",
+  titulo: "Demonstração do MEIagente",
+  duracao: 338.6,
+  largura: 1280,
+  altura: 688,
+} as const;
