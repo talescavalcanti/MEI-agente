@@ -596,24 +596,29 @@
     color: #0f172a;
   }
 
-  /* Wordmark — o "MEIagente." da marca em texto: Fustat 700 e o
-     quadrado da primária no lugar do ponto final, na altura da linha de base.
-     O quadrado é em `em` para acompanhar qualquer tamanho. */
+  /* Wordmark: a logo em SVG (components/Wordmark.tsx). A altura é em `em`
+     para acompanhar o `text-[…]` que cada tela passa, como a marca em texto
+     fazia; a largura sai da proporção do desenho (963 × 179). O texto pinta
+     com `currentColor`; selo e letras do selo, com variáveis, para a variante
+     sobre o azul trocar as três cores sem outro SVG. */
   .wordmark {
-    display: inline-flex;
-    align-items: baseline;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: -0.035em;
-    line-height: 1;
-    color: #0f172a;
-    white-space: nowrap;
+    display: inline-block;
+    height: 1.2em;
+    width: auto;
+    aspect-ratio: 963 / 179;
+    vertical-align: middle;
+    color: #15161b;
+    --wordmark-selo: #1e64fe;
+    --wordmark-selo-letras: #fff;
   }
-  .wordmark__dot {
-    width: 0.2em;
-    height: 0.2em;
-    margin-left: 0.07em;
-    background: #0052ff;
+  .wordmark__texto {
+    fill: currentColor;
+  }
+  .wordmark__selo {
+    fill: var(--wordmark-selo);
+  }
+  .wordmark__selo-letras {
+    fill: var(--wordmark-selo-letras);
   }
 
   /* §6.10 — sublinhado que cresce a partir do zero, e a cor vira a primária. */
@@ -648,12 +653,12 @@
     outline-color: #fff;
   }
 
-  /* A marca em branco, para cima do azul. */
+  /* A marca em branco, para cima do azul: selo branco e "IA" na cor da
+     sidebar, para o selo não sumir no fundo. */
   .wordmark--on-brand {
     color: #fff;
-  }
-  .wordmark--on-brand .wordmark__dot {
-    background: #fff;
+    --wordmark-selo: #fff;
+    --wordmark-selo-letras: #0052ff;
   }
 
   /* Sobretítulo do cabeçalho de página ("MEIAGENTE · INÍCIO"), com o traço da

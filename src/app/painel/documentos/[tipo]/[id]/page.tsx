@@ -28,7 +28,10 @@ export default async function VerDocumento({ params }: Props) {
       <div className="flex justify-between gap-4 border-b border-line pb-5"><strong className="font-heading text-title-dialog">{visto.mei.nome}</strong><span className="text-body-sm text-muted">{tipo === "orcamento" ? `Orçamento nº ${(visto.item as Orcamento).numero}` : "Minuta de contrato"}</span></div>
       {orc ? <><h2 className="text-title-dialog">{orc.titulo}</h2><p className="text-body">Cliente: {visto.cliente.nome}</p><div className="space-y-2">{orc.linhas.map((linha, i) => <div key={i} className="flex justify-between gap-4 border-b border-line py-2 text-body"><span>{linha.descricao}</span><span>{linha.valor}</span></div>)}</div><p className="text-right text-title-card">Total: {orc.total}</p><p className="text-body-sm">{orc.validade} · Pagamento: {orc.pagamento}</p></> : <><p className="rounded-field bg-amber-50 p-3 text-body-sm text-warn-text">{AVISO_MINUTA}</p><div className="whitespace-pre-wrap text-body leading-relaxed">{minuta}</div></>}
     </article>
-    <button type="button" id="imprimir-documento" className="print:hidden rounded-field bg-brand-500 px-5 py-3 text-body font-semibold text-white">Imprimir / salvar PDF</button>
+    {tipo === "contrato" ? <div className="print:hidden flex flex-wrap gap-3">
+      <a href={`/painel/documentos/contrato/${id}/pdf`} download className="rounded-field bg-brand-500 px-5 py-3 text-body font-semibold text-white">Baixar PDF</a>
+      <button type="button" id="imprimir-documento" className="rounded-field border border-line bg-white px-5 py-3 text-body font-semibold text-slate-700">Imprimir</button>
+    </div> : <button type="button" id="imprimir-documento" className="print:hidden rounded-field bg-brand-500 px-5 py-3 text-body font-semibold text-white">Imprimir / salvar PDF</button>}
     <script dangerouslySetInnerHTML={{ __html: "document.getElementById('imprimir-documento')?.addEventListener('click', () => window.print())" }} />
     <style>{`@media print { body:has(.print-document) aside, body:has(.print-document) header, body:has(.print-document) nav { display: none !important; } body:has(.print-document) main { margin: 0 !important; padding: 0 !important; max-width: none !important; } body:has(.print-document) { background: white !important; } }`}</style>
   </div>;

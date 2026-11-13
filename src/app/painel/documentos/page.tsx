@@ -16,7 +16,10 @@ export default async function Documentos() {
       <p className="eyebrow">{d.tipo === "orcamento" ? "Orçamento" : "Contrato"} · {d.status}</p>
       <h2 className="text-title-card">#{String(d.numero).padStart(3, "0")} · {d.descricao}</h2>
       <p className="text-body-sm text-muted">{d.cliente_nome}{d.valor == null ? "" : ` · ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(d.valor)}`}</p>
-      <Link className="text-link inline-block text-body-sm font-semibold text-brand-600" href={`/painel/documentos/${d.tipo}/${d.id}`}>Ver documento</Link>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <Link className="text-link inline-block text-body-sm font-semibold text-brand-600" href={`/painel/documentos/${d.tipo}/${d.id}`}>Ver documento</Link>
+        {d.tipo === "contrato" && <a className="text-link inline-block text-body-sm font-semibold text-brand-600" href={`/painel/documentos/contrato/${d.id}/pdf`} download aria-label={`Baixar PDF do contrato #${String(d.numero).padStart(3, "0")}, ${d.cliente_nome}`}>Baixar PDF</a>}
+      </div>
     </li>)}</ul>
   </div>;
 }
