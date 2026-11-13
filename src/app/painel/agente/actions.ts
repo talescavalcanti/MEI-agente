@@ -1,16 +1,23 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireMei, rpcDb } from "@/lib/dominio/mei";
-import type { ItemDecisaoPedido, ItemTipo, ItemVisto } from "@/lib/dominio/tipos";
+import type { ItemDecisaoPedido, ItemTipo, ItemVisto, NotaFiscal, NotaVista } from "@/lib/dominio/tipos";
 import {
   ERRO_NAO_ENCONTRADO,
+  ERRO_NOTA_NAO_ENCONTRADA,
+  XML_MAX_BYTES,
+  dadosEmissao,
   decisaoValida,
   erroDeAcao,
   idValido,
   montarCartao,
+  montarCartaoNota,
   tipoValido,
   validarEdicao,
+  type EntradaEmissao,
   type ResultadoCartao,
+  type ResultadoNota,
 } from "./cartao-dados";
 
 // Ações dos cartões de aprovação. Server Action é endpoint público: o MEI vem
@@ -78,4 +85,96 @@ export async function marcarEnviada(id: string): Promise<ResultadoCartao> {
   } catch (e) {
     return erroDeAcao(e);
   }
+}
+
+// ---------------------------------------------------------------- nota fiscal
+
+async function cartaoNota(meiId: string, id: string): Promise<ResultadoNota> {
+  const v = (await rpcDb("nota_ver", { p_mei: meiId, p_id: id })) as NotaVista;
+  return { cartao: montarCartaoNota(v.nota, { clienteNome: v.cliente?.nome ?? null, municipioMei: v.mei.municipio }) };
+}
+
+/** Estado atual da nota, para desenhar o cartão. */
+export async function verNota(id: string): Promise<ResultadoNota> {
+  const { mei } = await requireMei();
+  if (!idValido(id)) return { erro: ERRO_NOTA_NAO_ENCONTRADA };
+  try {
+    return await cartaoNota(mei.id, id);
+  } catch (e) {
+    return erroDeAcao(e);
+  }
+}
+
+/** Prepara (ou refaz) o rascunho da nota de um serviço, pela tela Notas a emitir. */
+export async function prepararNota(servicoId: string): Promise<ResultadoNota> {
+  const { mei } = await requireMei();
+  if (!idValido(servicoId)) return { erro: "Serviço não encontrado." };
+  try {
+    const nota = (await rpcDb("nota_preparar", { p_mei: mei.id, p_servico: servicoId })) as NotaFiscal;
+    revalidatePath("/painel/notas");
+    return await cartaoNota(mei.id, nota.id);
+  } catch (e) {
+    return erroDeAcao(e);
+  }
+}
+
+/**
+ * Aprovar ou descartar o rascunho da nota. Com avisos, aprovar exige
+ * `avisosConfirmados` (o SQL recusa sem). Repetir não muda nada.
+ */
+export async function decidirNota(
+  id: string,
+  decisao: ItemDecisaoPedido,
+  avisosConfirmados: boolean,
+): Promise<ResultadoNota> {
+  const { user, mei } = await requireMei();
+  if (!idValido(id)) return { erro: ERRO_NOTA_NAO_ENCONTRADA };
+  if (!decisaoValida(decisao)) return { erro: "Decisão inválida." };
+  try {
+    await rpcDb("nota_decidir", {
+      p_mei: mei.id,
+      p_id: id,
+      p_decisao: decisao,
+      p_user: user.id,
+      p_avisos_confirmados: avisosConfirmados === true,
+    });
+    revalidatePath("/painel/notas");
+    return await cartaoNota(mei.id, id);
+  } catch (e) {
+    return erroDeAcao(e);
+  }
+}
+
+/**
+ * Registra a nota emitida no Emissor Nacional: arquivo `xml` (até 200 KB,
+ * lido aqui no servidor com `lerNfse`; só os campos extraídos vão ao SQL) ou
+ * `numero` e `valor` digitados. O SQL confere contra o rascunho.
+ */
+export async function registrarEmissao(id: string, formData: FormData): Promise<ResultadoNota> {
+  const { mei } = await requireMei();
+  if (!idValido(id)) return { erro: ERRO_NOTA_NAO_ENCONTRADA };
+
+  const arquivo = formData.get("xml");
+  let entrada: EntradaEmissao;
+  if (arquivo instanceof File && arquivo.size > 0) {
+    // O tamanho é conferido antes de ler o conteúdo.
+    if (arquivo.size > XML_MAX_BYTES) return { erro: "O arquivo passa de 200 KB." };
+    entrada = { xml: { nome: arquivo.name, tamanho: arquivo.size, texto: await arquivo.text() } };
+  } else {
+    entrada = { numero: texto(formData.get("numero")), valor: texto(formData.get("valor")) };
+  }
+  const d = dadosEmissao(entrada);
+  if (!d.ok) return { erro: d.erro };
+
+  try {
+    await rpcDb("nota_registrar_emissao", { p_mei: mei.id, p_id: id, p_dados: d.dados });
+    revalidatePath("/painel/notas");
+    return await cartaoNota(mei.id, id);
+  } catch (e) {
+    return erroDeAcao(e);
+  }
+}
+
+function texto(v: FormDataEntryValue | null): string | null {
+  return typeof v === "string" ? v : null;
 }

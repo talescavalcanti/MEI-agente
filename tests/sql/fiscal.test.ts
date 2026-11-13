@@ -5,6 +5,7 @@ import type {
   FiscalParametros,
   Mei,
   Mensagem,
+  NotaAEmitir,
   NotaDecisao,
   NotaEmissaoResultado,
   NotaFiscal,
@@ -691,5 +692,55 @@ describe("tarefas_gerar_notas", () => {
     await notaEmitida(mei, s.id, user);
     const [t] = await b.q(`select status from public.tarefas where servico_id = $1 and tipo = 'emitir_nota'`, [s.id]);
     expect(t.status).toBe("feita");
+  });
+});
+
+describe("notas_a_emitir", () => {
+  const envelhecer = (servico: string, dias: number) =>
+    b.q(`update public.pagamentos set criado_em = now() - make_interval(days => $2) where servico_id = $1`, [servico, dias]);
+  const aEmitir = (mei: string) => b.rpc("notas_a_emitir", { p_mei: mei }) as Promise<NotaAEmitir[]>;
+
+  it("serviço pago de PJ há 6 dias + tarefas_gerar_notas → 1 linha com serviço e cliente", async () => {
+    const { mei, c, s } = await cenario();
+    await envelhecer(s.id, 6);
+    expect(await aEmitir(mei)).toEqual([]);
+    const [gerada] = await gerarTarefas();
+    expect(await aEmitir(mei)).toEqual([
+      {
+        tarefa_id: gerada.tarefa_id,
+        servico_id: s.id,
+        numero: s.numero,
+        descricao: "Manutenção de ar-condicionado",
+        valor: 800,
+        cliente_id: c.id,
+        cliente_nome: "Empresa X",
+        vencimento: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        dias_desde_pagamento: 6,
+      },
+    ]);
+  });
+
+  it("outro MEI não vê a tarefa", async () => {
+    const { s } = await cenario();
+    await envelhecer(s.id, 6);
+    await gerarTarefas();
+    const outro = await meiFiscal("Outro MEI");
+    expect(await aEmitir(outro)).toEqual([]);
+  });
+
+  it("tarefa feita (nota emitida) ou ignorada some da lista", async () => {
+    const { mei, s, user } = await cenario();
+    await envelhecer(s.id, 6);
+    await gerarTarefas();
+    await notaEmitida(mei, s.id, user);
+    expect(await aEmitir(mei)).toEqual([]);
+
+    const c2 = await clienteCom(mei, CNPJ_OUTRO, "Empresa Y");
+    const s2 = await servicoDe(mei, c2.id, 500);
+    await envelhecer(s2.id, 6);
+    const [t2] = await gerarTarefas();
+    expect(await aEmitir(mei)).toHaveLength(1);
+    await b.q(`update public.tarefas set status = 'ignorada' where id = $1`, [t2.tarefa_id]);
+    expect(await aEmitir(mei)).toEqual([]);
   });
 });

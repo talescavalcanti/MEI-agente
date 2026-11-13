@@ -1099,6 +1099,43 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Notas a emitir (tela Notas, Task 17d)
+-- ---------------------------------------------------------------------------
+
+-- Tarefas `emitir_nota` abertas do MEI, com o serviço e o cliente, por
+-- vencimento. Tarefa feita (nota emitida) ou ignorada não aparece.
+create or replace function public.notas_a_emitir(p_mei uuid)
+returns table (
+  tarefa_id            uuid,
+  servico_id           uuid,
+  numero               int,
+  descricao            text,
+  valor                numeric,
+  cliente_id           uuid,
+  cliente_nome         text,
+  vencimento           date,
+  dias_desde_pagamento int
+)
+language sql
+stable
+set search_path = ''
+as $$
+  select t.id, s.id, s.numero, s.descricao, s.valor, c.id, c.nome, t.vencimento,
+         public.hoje_sp() - (
+           select max((p.criado_em at time zone 'America/Sao_Paulo')::date)
+           from public.pagamentos p
+           where p.servico_id = s.id and p.mei_id = p_mei
+         )
+  from public.tarefas t
+  join public.servicos s on s.id = t.servico_id and s.mei_id = p_mei
+  join public.clientes c on c.id = s.cliente_id and c.mei_id = p_mei
+  where t.mei_id = p_mei
+    and t.tipo = 'emitir_nota'
+    and t.status = 'aberta'
+  order by t.vencimento, s.numero;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Permissões: só o servidor (service_role) chama.
 -- ---------------------------------------------------------------------------
 revoke execute on function public.fiscal_parametros(int) from public, anon, authenticated;
@@ -1116,6 +1153,7 @@ revoke execute on function public.nota_ver(uuid, uuid) from public, anon, authen
 revoke execute on function public.notas_listar(uuid, text) from public, anon, authenticated;
 revoke execute on function public.faturamento_ano(uuid, int) from public, anon, authenticated;
 revoke execute on function public.tarefas_gerar_notas(int) from public, anon, authenticated;
+revoke execute on function public.notas_a_emitir(uuid) from public, anon, authenticated;
 revoke execute on function public.mensagens_nota_valida() from public, anon, authenticated;
 revoke execute on function public.mensagem_rascunhar(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.fiscal_parametros(int) to service_role;
@@ -1133,6 +1171,7 @@ grant execute on function public.nota_ver(uuid, uuid) to service_role;
 grant execute on function public.notas_listar(uuid, text) to service_role;
 grant execute on function public.faturamento_ano(uuid, int) to service_role;
 grant execute on function public.tarefas_gerar_notas(int) to service_role;
+grant execute on function public.notas_a_emitir(uuid) to service_role;
 grant execute on function public.mensagem_rascunhar(uuid, jsonb) to service_role;
 
 -- O PostgREST precisa enxergar as tabelas e as funções novas sem esperar.

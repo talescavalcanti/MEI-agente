@@ -476,6 +476,22 @@ export type FaturamentoAno = {
   faixa: FaixaFaturamento;
 };
 
+/** Linha de `notas_a_emitir`: tarefa `emitir_nota` aberta, com serviço e cliente. */
+export type NotaAEmitir = {
+  tarefa_id: string;
+  servico_id: string;
+  /** Número do serviço. */
+  numero: number;
+  descricao: string;
+  valor: number | null;
+  cliente_id: string;
+  cliente_nome: string;
+  /** `AAAA-MM-DD` */
+  vencimento: string;
+  /** Dias desde o último pagamento (America/Sao_Paulo); null sem pagamento. */
+  dias_desde_pagamento: number | null;
+};
+
 /** Linha de `tarefas_gerar_notas`: só as tarefas criadas nesta rodada. */
 export type NotaTarefaGerada = {
   mei_id: string;
