@@ -17,7 +17,7 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
  */
 
 /** Rotas que existem justamente para quem não tem sessão. */
-const PUBLIC_PAGES = new Set(["/login", "/setup"]);
+const PUBLIC_PAGES = new Set(["/login", "/setup", "/cadastro"]);
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
