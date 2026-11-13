@@ -15,10 +15,17 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/supabase", () => ({
-  db: {},
+  db: {
+    async rpc() {
+      return { data: 0, error: null };
+    },
+  },
 }));
 
 vi.mock("@/lib/auth/users", () => ({
+  normalizeEmail(email: string) {
+    return email.trim().toLowerCase();
+  },
   async probeUsers() {
     if (h.falhaBanco) {
       return { ok: false as const, reason: "unavailable" as const, message: h.falhaBanco };
@@ -34,8 +41,11 @@ vi.mock("@/lib/auth/users", () => ({
     h.usuarios.push(novo);
     return { id: novo.id };
   },
-  async findForLogin() {
-    return null;
+  async findForLogin(email: string) {
+    const emailNorm = email.trim().toLowerCase();
+    const u = h.usuarios.find((x) => x.email === emailNorm);
+    if (!u) return null;
+    return { id: u.id, role: u.role, token_version: 1, password_hash: u.password_hash };
   },
   async touchLogin() {},
 }));
@@ -63,7 +73,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-import { criarConta } from "@/app/auth/actions";
+import { criarConta, login } from "@/app/auth/actions";
 
 function form(dados: { name?: string; email?: string; password?: string }): FormData {
   const fd = new FormData();
@@ -79,7 +89,7 @@ beforeEach(() => {
   h.falhaBanco = null;
 });
 
-describe("criarConta", () => {
+describe("criarConta e login", () => {
   it("cria o primeiro usuário como admin quando o banco está vazio", async () => {
     await expect(
       criarConta(undefined, form({ name: "Ana", email: "ana@exemplo.com", password: "Senha1234" })),
@@ -116,7 +126,7 @@ describe("criarConta", () => {
     expect(h.sessaoCriada).toEqual({ sub: "user-2", role: "user", ver: 1 });
   });
 
-  it("recusa email já cadastrado com mensagem clara", async () => {
+  it("recusa email já cadastrado com mensagem clara e preserva nome e email", async () => {
     h.usuarios.push({
       id: "user-1",
       name: "Ana",
@@ -129,20 +139,42 @@ describe("criarConta", () => {
       undefined,
       form({ name: "Outra Ana", email: "ANA@exemplo.com", password: "Senha1234" }),
     );
-    expect(res).toEqual({ error: "Já existe um usuário com esse email." });
+    expect(res).toEqual({
+      error: "Já existe um usuário com esse email.",
+      name: "Outra Ana",
+      email: "ANA@exemplo.com",
+    });
     expect(h.sessaoCriada).toBeNull();
   });
 
-  it("valida nome, email e senha antes de gravar", async () => {
+  it("valida nome, email e senha antes de gravar e preserva nome e email no estado", async () => {
     expect(await criarConta(undefined, form({ name: "", email: "a@b.com", password: "Senha1234" }))).toEqual({
       error: "Informe seu nome.",
+      name: "",
+      email: "a@b.com",
     });
     expect(await criarConta(undefined, form({ name: "Ana", email: "invalido", password: "Senha1234" }))).toEqual({
       error: "Informe um email válido.",
+      name: "Ana",
+      email: "invalido",
     });
     expect(await criarConta(undefined, form({ name: "Ana", email: "a@b.com", password: "curta" }))).toEqual({
       error: "A senha precisa de pelo menos 8 caracteres.",
+      name: "Ana",
+      email: "a@b.com",
     });
     expect(h.usuarios).toHaveLength(0);
+  });
+
+  it("login preserva o email preenchido quando a senha está incorreta", async () => {
+    await expect(
+      criarConta(undefined, form({ name: "Ana", email: "ana@exemplo.com", password: "Senha1234" })),
+    ).rejects.toThrow("REDIRECT:/painel/negocio");
+
+    const res = await login(undefined, form({ email: "ana@exemplo.com", password: "SenhaErrada99" }));
+    expect(res).toEqual({
+      error: "Email ou senha incorretos.",
+      email: "ana@exemplo.com",
+    });
   });
 });
