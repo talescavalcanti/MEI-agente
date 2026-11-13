@@ -51,6 +51,9 @@ describe("FERRAMENTAS", () => {
       "listar_propostas_pendentes",
       "registrar_pagamento",
       "salvar_memoria",
+      "preparar_nota_fiscal",
+      "salvar_documento_cliente",
+      "consultar_faturamento",
     ]);
   });
 
