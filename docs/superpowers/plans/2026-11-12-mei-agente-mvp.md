@@ -135,15 +135,15 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `cliente_buscar(p_mei, p_termo text) → setof clientes` — nome sem acento/caixa (contém) ou dígitos do telefone; máx. 10
   - `so_digitos(text) → text` (tira tudo que não é dígito e o `55` inicial quando sobram 12–13 dígitos)
 
-- [ ] **Step 1:** Testes:
+- [x] **Step 1:** Testes:
   - `cliente_salvar` com `"62 9 9999-0000"` e depois `"+55 (62) 99999-0000"` → `count(*) = 1` e o nome é o da 2ª chamada.
   - `cliente_salvar` sem nome em cadastro novo → erro `regra: informe o nome do cliente`.
   - `cliente_buscar(mei_a, 'maria')` acha "María Souza"; `cliente_buscar(mei_b, 'maria')` devolve vazio.
   - `cliente_salvar(mei_b, {id: <cliente do mei_a>, nome: 'x'})` → erro `regra: cliente não encontrado` e a linha original intacta.
-- [ ] **Step 2:** Run. Expected: FAIL.
-- [ ] **Step 3:** Implementar o SQL.
-- [ ] **Step 4:** Run. Expected: PASS.
-- [ ] **Step 5:** Commit `feat: mei e clientes com regras no sql`.
+- [x] **Step 2:** Run. Expected: FAIL.
+- [x] **Step 3:** Implementar o SQL.
+- [x] **Step 4:** Run. Expected: PASS.
+- [x] **Step 5:** Commit `feat: mei e clientes com regras no sql`.
 
 ### Task 4: Serviços, agenda, pagamentos e máquina de estados
 
