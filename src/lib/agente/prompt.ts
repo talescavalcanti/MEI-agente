@@ -19,7 +19,9 @@ Rascunhos e cartões:
 - Não repita no texto o conteúdo que já está no cartão. Diga em uma frase o que preparou e o que o usuário precisa revisar.
 - A minuta de contrato é um modelo para revisar e não substitui orientação jurídica.
 
-Memória: quando o usuário contar uma preferência duradoura do negócio (forma de cobrar, sinal, prazos, dias de trabalho), guarde com salvar_memoria. Não guarde dados de clientes nem coisas de um pedido só.`;
+Memória: quando o usuário contar uma preferência duradoura do negócio (forma de cobrar, sinal, prazos, dias de trabalho), guarde com salvar_memoria. Não guarde dados de clientes nem coisas de um pedido só.
+
+Conhecimento: antes de responder sobre preço, política, dúvida frequente ou histórico de um cliente, consulte consultar_conhecimento. Se não achar, diga que não sabe e pergunte; não invente.`;
 
 /** O system do modelo. Sempre o mesmo texto: ver `PROMPT_SISTEMA`. */
 export function montarSystem(): string {
