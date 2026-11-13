@@ -1,7 +1,7 @@
 // Bloco de contexto do negócio, prefixado ao texto do usuário a cada turno.
 // Fica fora do prompt do sistema para o system continuar constante.
 
-import type { Mei } from "@/lib/dominio/tipos";
+import type { Mei, Rpc } from "@/lib/dominio/tipos";
 
 const DIAS = [
   "domingo",
@@ -46,4 +46,13 @@ export function blocoContexto(mei: Mei, memorias: string[], hoje: string): strin
   }
 
   return `<contexto_do_negocio>\n${linhas.join("\n")}\n</contexto_do_negocio>`;
+}
+
+/**
+ * O texto do turno com o bloco de contexto na frente, já com as memórias do
+ * MEI (`memoria_listar`). Usado pelo chat e pelo agendador.
+ */
+export async function prefixarContexto(rpc: Rpc, mei: Mei, hoje: string, texto: string): Promise<string> {
+  const memorias = (await rpc("memoria_listar", { p_mei: mei.id })) as { fato: string }[] | null;
+  return `${blocoContexto(mei, (memorias ?? []).map((m) => m.fato), hoje)}\n\n${texto}`;
 }

@@ -73,6 +73,7 @@ MEIagente/
 │   ├── 05-pendencias.sql      tarefas + detecção de proposta parada
 │   ├── 06-agente.sql          conversas, conversa_mensagens, agente_acoes, agente_uso, memorias
 │   ├── 07-consultas.sql       funções de listagem das telas (Task 14)
+│   ├── 08-proatividade.sql    lembretes de propostas paradas e Início (Task 15)
 │   ├── 90-cron.sql            job do pg_cron (placeholder de segredo)
 │   └── seed/demo.sql          dados de demonstração
 ├── src/lib/
@@ -409,10 +410,15 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - Consumes: `tarefas_gerar_followups`, `propostas_pendentes`, `rodarTurno`, `tarefa_fechar`.
 - Produces: `sugerirFollowups(deps, meiId): Promise<{ sugeridas: number }>` — para cada tarefa aberta sem mensagem ligada, roda `rodarTurno` com `origem: "agendador"` e o texto `Proposta parada: serviço #<n> (<cliente>, <descrição>, <valor>) sem resposta há <d> dias. Redija um lembrete curto e cordial com redigir_mensagem (objetivo lembrete, tarefa_id <id>).`; máximo 5 por execução. Rota `POST|GET /api/cron/pendencias` protegida por `CRON_SECRET` (mesmo `authorized()` do meu-chat). Action `verificarPendenciasAgora()` (mesma função, só para o MEI logado). Job `mei-agente-pendencias` `'0 11 * * *'` (08:00 em São Paulo).
 
-- [ ] **Step 1:** Teste com LLM falso: uma proposta parada há 4 dias → 1 mensagem `rascunho` com `tarefa_id`; rodar de novo → continua 1; 7 propostas paradas → 5 sugeridas.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Início: "Hoje" (agendamentos do dia), "Esperando sua decisão" (rascunhos abertos, com `Cartao`), "Propostas paradas" (com **[Ver lembrete] [Ignorar]** e botão "Verificar agora"), atalho para o agente.
-- [ ] **Step 6:** Commit `feat: acompanhamento de propostas paradas`.
+- [x] **Step 1:** Teste com LLM falso: uma proposta parada há 4 dias → 1 mensagem `rascunho` com `tarefa_id`; rodar de novo → continua 1; 7 propostas paradas → 5 sugeridas.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Início: "Hoje" (agendamentos do dia), "Esperando sua decisão" (rascunhos abertos, com `Cartao`), "Propostas paradas" (com **[Ver lembrete] [Ignorar]** e botão "Verificar agora"), atalho para o agente.
+- [x] **Step 6:** Commit `feat: acompanhamento de propostas paradas`.
+- **Feito:** `src/lib/agente/pendencias.ts` com `sugerirFollowups(deps, meiId, limite = 5)` (devolve `{ sugeridas, tentativas }`; conta pelo banco: só vale lembrete gravado com a tarefa ligada) e `rodarAgendador(rpc, depsDe, { meiId?, limite? })` (abre as tarefas e pede os lembretes, teto de 5 turnos por execução no total; falha num MEI não para os outros). O pedido ao agente leva também `cliente_id` e `servico_id`, que o `redigir_mensagem` exige. Cada lembrete vira uma conversa `agendador` com o contexto do negócio na frente (`prefixarContexto` em `contexto.ts`, também usado pelo chat).
+  - **SQL:** `05-pendencias.sql`: `tarefas_gerar_followups(p_dias, p_mei uuid default null)` (com `p_mei`, só aquele MEI, para o "Verificar agora" não mexer nos outros; a versão só com `p_dias` é removida). Novo `08-proatividade.sql`: `mei_por_id`, `followups_sem_lembrete(p_mei, p_limite)`, `followups_meis_pendentes()` (cron) e `propostas_paradas(p_mei, p_dias)` (Início: com tarefa aberta ou que nunca teve tarefa, mais o lembrete). Lembrete descartado não é redigido de novo; para parar de lembrar, Ignorar.
+  - **Rota:** `GET|POST /api/cron/pendencias` com `Authorization: Bearer <CRON_SECRET>` (comparação em tempo constante), `maxDuration = 300`. `90-cron.sql` usa `pg_net` e tem dois placeholders: `<APP_URL>` e `<CRON_SECRET>`.
+  - **Início:** Hoje, Esperando sua decisão (até 6 cartões; o lembrete de proposta parada não se repete aqui), Propostas paradas (`Pendencias.tsx`, com Ver lembrete, Ignorar e Verificar agora) e atalho para o agente. Actions em `src/app/painel/actions.ts` usam `refresh()` do `next/cache`.
+  - **Pendente:** conferência visual do Início com o seed (precisa de Supabase de verdade) e configurar o `90-cron.sql` no deploy.
 
 ### Task 16: Demo, README e deploy
 

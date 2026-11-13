@@ -3,7 +3,7 @@ import { meiDoUsuario, rpcDb } from "@/lib/dominio/mei";
 import type { Mei, Rpc } from "@/lib/dominio/tipos";
 import { env } from "@/lib/env";
 import { ymdSP } from "@/lib/tz";
-import { blocoContexto } from "./contexto";
+import { prefixarContexto } from "./contexto";
 import { criarLlm } from "./llm";
 import type { DepsTurno } from "./loop";
 import { montarSystem } from "./prompt";
@@ -41,8 +41,6 @@ export async function prepararTurno(userId: string): Promise<{ deps: DepsTurno; 
  * O texto do usuário com o bloco `<contexto_do_negocio>` na frente (dados do
  * MEI, hoje e memórias). O system fica constante; o que muda vai aqui.
  */
-export async function textoComContexto(deps: DepsTurno, mei: Mei, texto: string): Promise<string> {
-  const memorias = (await deps.rpc("memoria_listar", { p_mei: mei.id })) as { fato: string }[] | null;
-  const fatos = (memorias ?? []).map((m) => m.fato);
-  return `${blocoContexto(mei, fatos, deps.hoje)}\n\n${texto}`;
+export function textoComContexto(deps: DepsTurno, mei: Mei, texto: string): Promise<string> {
+  return prefixarContexto(deps.rpc, mei, deps.hoje, texto);
 }
