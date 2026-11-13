@@ -25,6 +25,12 @@ O MEI descreve o serviço em uma frase. O agente organiza o resto e só age com 
 </p>
 
 <p>
+  <a href="https://pub-544e5cb5fea74a52aaeb7059bd01a459.r2.dev/meiagente-video-compressed.mp4">
+    <img alt="Assistir demonstração em vídeo do MEIagente" src="docs/marca/demo-player.png" width="760" />
+  </a>
+</p>
+
+<p>
 <a href="#1-o-problema">Problema</a>
 &nbsp;&middot;&nbsp;
 <a href="#2-a-solução">Solução</a>
