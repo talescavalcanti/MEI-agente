@@ -26,7 +26,7 @@ export type Mei = {
   chave_pix: string | null;
   /** Data e hora em texto ISO. */
   criado_em: string;
-  /** Dados fiscais (10-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
+  /** Dados fiscais (11-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
   cnpj: string | null;
   inscricao_municipal: string | null;
   /** Município do prestador, para a NFS-e. */
@@ -349,7 +349,7 @@ export type FollowupGerado = {
 };
 
 // ---------------------------------------------------------------------------
-// Nota fiscal assistida e faturamento (10-fiscal.sql)
+// Nota fiscal assistida e faturamento (11-fiscal.sql)
 // ---------------------------------------------------------------------------
 
 /** Retorno de `fiscal_parametros(p_ano)`. O limite muda por ano (LC 238/2026). */
@@ -497,4 +497,33 @@ export type NotaTarefaGerada = {
   mei_id: string;
   tarefa_id: string;
   servico_id: string;
+};
+
+// ---------------------------------------------------------------------------
+// Base de conhecimento (supabase/10-conhecimento.sql)
+// ---------------------------------------------------------------------------
+
+export type ConhecimentoTipo = "nota_cliente" | "atendimento" | "preco" | "faq" | "politica";
+
+/** Linha de `conhecimento` (sem a coluna `busca`, que é só do índice). */
+export type Conhecimento = {
+  id: string;
+  mei_id: string;
+  cliente_id: string | null;
+  tipo: ConhecimentoTipo;
+  titulo: string;
+  conteudo: string;
+  criado_em: string;
+  atualizado_em: string;
+};
+
+/** Linha de `conhecimento_buscar`: conteúdo cortado em 600 caracteres. */
+export type ConhecimentoAchado = {
+  id: string;
+  tipo: ConhecimentoTipo;
+  titulo: string;
+  conteudo: string;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  relevancia: number;
 };

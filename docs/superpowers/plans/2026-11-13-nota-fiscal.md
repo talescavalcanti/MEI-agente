@@ -116,7 +116,7 @@ tests/sql/fiscal.test.ts, tests/fiscal/{documento,xml}.test.ts, tests/fiscal/fix
 
 **Decisões da 17a (13/11, revisadas pelo orquestrador):**
 - Arquivo é `09-fiscal.sql` (a `developer` ganhou `08-proatividade.sql`); roda depois do 08.
-- **13/11 (integração com a developer):** renomeado para `10-fiscal.sql`, porque a `developer` ganhou `09-meta.sql`; roda depois do 09. O loader dos testes passou a ler `[0-8][0-9]-*.sql`.
+- **13/11 (integração com a developer):** renomeado para `11-fiscal.sql`, porque a `developer` ganhou `09-meta.sql` e `10-conhecimento.sql`; roda depois do 10. O loader dos testes passou a ler `[0-8][0-9]-*.sql`.
 - `mensagem_rascunhar` (do 04) é **redefinida** no 09 para aceitar `envio_nota` e `nota_id`. Rodar o 04 de novo sem o 09 volta a versão antiga: sempre rodar o 09 depois.
 - Nota parcial: cada chamada cria uma parcial nova (a soma limita); nota inteira em rascunho é refeita com o mesmo id.
 - `municipio_diferente` só avisa quando o endereço termina em "Cidade/UF" ou "Cidade - UF".

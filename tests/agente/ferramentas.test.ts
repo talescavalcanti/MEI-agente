@@ -54,6 +54,7 @@ describe("FERRAMENTAS", () => {
       "preparar_nota_fiscal",
       "salvar_documento_cliente",
       "consultar_faturamento",
+      "consultar_conhecimento",
     ]);
   });
 

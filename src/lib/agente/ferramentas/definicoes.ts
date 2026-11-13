@@ -176,4 +176,13 @@ export const FERRAMENTAS: Ferramenta[] = [
     descricao: "Faturamento do ano (padrão: o atual) frente ao limite do MEI.",
     esquema: z.object({ ano: z.number().int().optional() }),
   },
+  {
+    nome: "consultar_conhecimento",
+    descricao: "Busca no histórico de clientes, preços, dúvidas frequentes e políticas do negócio.",
+    esquema: z.object({
+      termo: z.string().min(1),
+      cliente_id: id("cliente_id").optional(),
+      tipo: z.enum(["nota_cliente", "atendimento", "preco", "faq", "politica"]).optional(),
+    }),
+  },
 ];

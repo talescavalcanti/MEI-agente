@@ -386,6 +386,7 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - [ ] **Step 5:** Verificação manual com o cenário do README §3: as duas falas produzem 3 cartões; aprovar a mensagem libera "Copiar"; clique duplo em Aprovar não duplica nada; F5 mantém conversa e estados.
 - [ ] **Step 6:** Commit `feat: chat do agente com cartoes de aprovacao`.
 - **Parte A feita (PR #14):** `actions.ts`, `cartao-dados.ts`, `Cartao.tsx`, `EditarItem.tsx`, `tests/agente/cartao.test.ts`. As 4 actions devolvem `{ cartao: CartaoDados } | { erro: string }`. `<Cartao cartao={{tipo,id}} inicial?={CartaoDados} />`: sem `inicial`, chama `verItem` sozinho (serve para o stream e para o F5). **Falta a parte B:** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` (Steps 1 e 5).
+- **Parte B (13/11):** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` vieram do PR #18 (mergeado por engano em `main`) e entraram no `developer` pelo PR #28 (cherry-pick de 58aad78 e 90d27d0). Step 5 (verificação manual) pendente.
 
 ### Task 14: Telas de consulta
 
@@ -433,7 +434,15 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 
 ---
 - **Feito (PR #16):** seed (o #009 e a data de envio exigiram escrita direta no seed, documentada lá), `smoke.sh` pronto mas ainda sem rodar (faltam `/api/chat` e `/api/cron/pendencias`), README §14. Steps 4 e 5 (ensaio e deploy) pendentes.
+- **Deploy (13/11, ok do dono):** projeto Vercel `mei-agente`, produção em https://meiagente.talescavalcanti.dev (região gru1), variáveis em Production e Preview. Ensaio (Step 4) pendente.
 
+
+## Desvios aprovados pelo dono em 13/11 (fora do MVP)
+
+- **Integração com a Meta, parte 1 (receber):** PR #26. `supabase/09-meta.sql` (`canais_conectados`, `mensagens_recebidas`, `canal_conectar`, `mensagem_recebida_registrar`, `mensagens_recebidas_listar`), `src/lib/meta/{assinatura,eventos}.ts`, rota `/api/meta/webhook` (GET handshake, POST com `X-Hub-Signature-256`). Variáveis `META_*` opcionais: sem elas a integração fica desligada. `mensagem_recebida_registrar` é exceção consciente à regra "p_mei primeiro" (o webhook só conhece a conta; a conta aponta o MEI). Ainda não mostra as mensagens em tela.
+- **Integração com a Meta, parte 2 (enviar o que foi aprovado):** não começada. A regra "nada de envio automático" continua: o envio só sai por clique do usuário num item já aprovado.
+- **Base de conhecimento e seed sintético completo (PR #29, builder-02):** `supabase/10-conhecimento.sql`: tabela `conhecimento` (tipos `nota_cliente`, `atendimento`, `preco`, `faq`, `politica`; `nota_cliente` e `atendimento` exigem cliente do mesmo MEI; upsert por tipo, cliente e título). Busca full-text em português com `sem_acento` (título e nome do cliente com peso A, conteúdo com peso B), sem embeddings e sem API paga. O tsvector é calculado em `conhecimento_salvar`: renomear o cliente não reindexa. `conhecimento_buscar(p_mei, p_termo, p_cliente?, p_tipo?, p_limite=5)` junta os termos com OU, limite de 1 a 10, conteúdo cortado em 600 caracteres. Ferramenta `consultar_conhecimento` (17ª, só leitura, sem cartão; vazio devolve "Nada encontrado… não invente") e parágrafo no prompt. `supabase/seed/demo-completo.sql`: MEI fictício "Lima Reparos e Climatização" com 20 clientes, 29 serviços nos 8 status, documentos e mensagens em todos os estados, 4 propostas paradas, 6 memórias e 41 itens de conhecimento; conta separada da do `demo.sql`. `tests/helpers/banco.ts` carrega `supabase/[0-8]\d-*.sql`. Não verificado: modelo real chamando a ferramenta e o seed no Supabase.
+- **App na Meta:** app `MEIagente` (1677711663821244) no Business Portfolio `MEIagente`, caso de uso Instagram com login unificado, conta @avoralabss.br, token de System User sem expiração. WhatsApp ainda não adicionado ao app.
 
 ## Provedor: Featherless
 

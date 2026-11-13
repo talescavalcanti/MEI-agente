@@ -44,6 +44,7 @@ describe("PROMPT_SISTEMA", () => {
       "consultar_faturamento",
       "Emissor Nacional",
       "Meu negócio",
+      "consultar_conhecimento",
     ]) {
       expect(PROMPT_SISTEMA).toContain(trecho);
     }

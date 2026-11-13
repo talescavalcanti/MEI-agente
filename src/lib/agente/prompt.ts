@@ -26,7 +26,9 @@ Nota fiscal:
 - Se a regra pedir dados fiscais, sugira completar em Meu negócio.
 - Para falar de faturamento, use consultar_faturamento. Nunca some de cabeça.
 
-Memória: quando o usuário contar uma preferência duradoura do negócio (forma de cobrar, sinal, prazos, dias de trabalho), guarde com salvar_memoria. Não guarde dados de clientes nem coisas de um pedido só.`;
+Memória: quando o usuário contar uma preferência duradoura do negócio (forma de cobrar, sinal, prazos, dias de trabalho), guarde com salvar_memoria. Não guarde dados de clientes nem coisas de um pedido só.
+
+Conhecimento: antes de responder sobre preço, política, dúvida frequente ou histórico de um cliente, consulte consultar_conhecimento. Se não achar, diga que não sabe e pergunte; não invente.`;
 
 /** O system do modelo. Sempre o mesmo texto: ver `PROMPT_SISTEMA`. */
 export function montarSystem(): string {
