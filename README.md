@@ -363,11 +363,18 @@ MEIagente/
 
 ## 14. Como rodar
 
-1. Crie um projeto no Supabase. No **SQL Editor**, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/08-proatividade.sql`. O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente: ele usa `pg_cron` e `pg_net` e precisa que você troque `<APP_URL>` e `<CRON_SECRET>` antes de rodar (sem commitar o resultado). Localmente, o botão **Verificar agora** do Início faz o mesmo que o agendamento.
+1. Crie um projeto no Supabase. No **SQL Editor**, execute, em ordem, os arquivos `supabase/01-auth.sql` a `supabase/09-meta.sql`. O `90-cron.sql` é para o agendamento em produção e não é necessário para rodar localmente: ele usa `pg_cron` e `pg_net` e precisa que você troque `<APP_URL>` e `<CRON_SECRET>` antes de rodar (sem commitar o resultado). Localmente, o botão **Verificar agora** do Início faz o mesmo que o agendamento.
 2. Copie `.env.example` para `.env.local` e preencha `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `CRON_SECRET` e `FEATHERLESS_API_KEY`. Use `AGENTE_MODELO=google/gemma-4-31B-it`. A service role key deve ficar apenas no servidor. Não há `APP_URL`.
 3. Rode `npm install` e `npm run dev`; abra `http://localhost:3000/setup` e crie seu usuário. Complete o cadastro do negócio na tela seguinte.
 4. Para carregar a demonstração, abra `supabase/seed/demo.sql`, substitua `<EMAIL_DO_USUARIO>` pelo email usado em `/setup` e execute o arquivo no SQL Editor. O seed pode ser executado mais de uma vez; ele cria o MEI Refrigeração Bueno, cinco clientes, um serviço pago, um agendamento para amanhã e a proposta #009 de Carlos parada há quatro dias.
 5. Quando as rotas de chat e agendador estiverem disponíveis, execute `./scripts/smoke.sh` com o servidor local em execução para conferir as respostas HTTP sem sessão.
+6. Opcional, para receber mensagens do Instagram e do WhatsApp: preencha `META_APP_SECRET` e `META_WEBHOOK_VERIFY_TOKEN` (e as demais variáveis da seção Meta do `.env.example`). No painel da Meta, cadastre o webhook com a URL `https://<seu-domínio>/api/meta/webhook` e o mesmo verify token. Depois ligue a conta ao seu negócio no SQL Editor, trocando o id pelo da sua conta profissional do Instagram (no WhatsApp, use `'whatsapp'` e o `phone_number_id`):
+
+   ```sql
+   select public.canal_conectar((select id from public.meis limit 1), 'instagram', '17841429113044909');
+   ```
+
+   Mensagens de contas não ligadas são ignoradas. Por enquanto o app só recebe e guarda; não responde.
 
 Para verificar o código sem banco real nem chamada ao modelo, rode `npm test` e `npm run lint`. `npm run build` também precisa das variáveis de `.env.local`; valores fictícios bastam para o build local.
 
