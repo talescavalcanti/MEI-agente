@@ -232,9 +232,9 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `renderMinuta(d: DadosDocumento, clausulasExtras?: string[]): string` — texto com cláusulas fixas (objeto, preço e pagamento, prazo, obrigações, rescisão, foro = cidade do MEI), o aviso obrigatório no topo e `[A PREENCHER]` em todo dado ausente
   - `valoresDivergentes(texto: string, valor: number): string[]` — valores em reais citados no texto que diferem de `valor`
 
-- [ ] **Step 1:** Testes: `moeda(800) === "R$ 800,00"`; `renderMinuta` sem endereço contém `[A PREENCHER]` e começa com o aviso; cláusula extra aparece numerada depois das fixas; **Review Focus 5:** `valoresDivergentes("Valor combinado: R$ 80", 800)` → `["R$ 80,00"]`; `valoresDivergentes("R$ 800,00 no Pix", 800)` e `("R$800", 800)` → `[]`; texto sem valor → `[]`.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: templates de orcamento e minuta`.
+- [x] **Step 1:** Testes: `moeda(800) === "R$ 800,00"`; `renderMinuta` sem endereço contém `[A PREENCHER]` e começa com o aviso; cláusula extra aparece numerada depois das fixas; **Review Focus 5:** `valoresDivergentes("Valor combinado: R$ 80", 800)` → `["R$ 80,00"]`; `valoresDivergentes("R$ 800,00 no Pix", 800)` e `("R$800", 800)` → `[]`; texto sem valor → `[]`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: templates de orcamento e minuta`.
 
 ### Task 8: Ferramentas do agente
 
