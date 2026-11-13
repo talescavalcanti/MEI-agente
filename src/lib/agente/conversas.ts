@@ -4,7 +4,7 @@
 
 import type { ModelMessage } from "ai";
 import type { Rpc } from "@/lib/dominio/tipos";
-import type { Cartao } from "./ferramentas/definicoes";
+import type { Cartao } from "./ferramentas/executar";
 
 export type ConversaOrigem = "chat" | "agendador";
 
@@ -35,9 +35,13 @@ export type NovaMensagem = { mensagem: ModelMessage; cartoes?: Cartao[] | null }
 
 export type AcaoTipo = "ferramenta" | "decisao";
 
-/** Título da conversa a partir do 1º texto do usuário. */
+/**
+ * Título da conversa a partir do 1º texto do usuário: a primeira linha, sem o
+ * bloco `<contexto_do_negocio>` (contexto.ts) que vai prefixado ao texto.
+ */
 export function tituloDe(texto: string): string {
-  const linha = texto.trim().split("\n")[0].replace(/\s+/g, " ").trim();
+  const sem = texto.replace(/<contexto_do_negocio>[\s\S]*?<\/contexto_do_negocio>/gi, "");
+  const linha = (sem.trim().split("\n")[0] ?? "").replace(/\s+/g, " ").trim();
   if (!linha) return "Nova conversa";
   return linha.length > 60 ? `${linha.slice(0, 59)}…` : linha;
 }
