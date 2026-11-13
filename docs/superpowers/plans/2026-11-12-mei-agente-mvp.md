@@ -393,10 +393,11 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 **Interfaces:**
 - Consumes: `cliente_buscar`, `servico_listar`, `agenda_listar`, `item_ver`, `renderOrcamento`; novas funções de leitura em `04-documentos.sql`: `documentos_listar(p_mei)`, `mensagens_listar(p_mei, p_status text default null)`.
 
-- [ ] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
-- [ ] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
+- [x] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
+- [x] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
 - [ ] **Step 3:** `npm run build` e conferência visual das cinco telas com o seed.
-- [ ] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- [x] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- **Feito (PR #17):** cinco telas, página de impressão e `07-consultas.sql` com testes. Mensagens ainda é lista simples: trocar pelo `Cartao` junto com a parte B da Task 13. Step 3 (conferência visual com o seed) pendente.
 
 ### Task 15: Proatividade (agendador e Início)
 
