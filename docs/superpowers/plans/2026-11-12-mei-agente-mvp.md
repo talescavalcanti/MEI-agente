@@ -418,13 +418,15 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 **Files:**
 - Create: `supabase/seed/demo.sql`, `scripts/smoke.sh`; Modify: `README.md` (§14 "Como rodar", status), `.env.example`
 
-- [ ] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
-- [ ] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
-- [ ] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
+- [x] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
+- [x] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
+- [x] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
 - [ ] **Step 4:** Ensaiar o roteiro de demo: (1) fala do README → cartões → aprovar e copiar; (2) "Verificar agora" → lembrete do Carlos; (3) "me dá uma ideia de post para essa semana" → rascunho de post.
 - [ ] **Step 5:** Commit `docs: como rodar e dados de demonstracao`. Deploy na Vercel **só com o ok do dono**.
 
 ---
+- **Feito (PR #16):** seed (o #009 e a data de envio exigiram escrita direta no seed, documentada lá), `smoke.sh` pronto mas ainda sem rodar (faltam `/api/chat` e `/api/cron/pendencias`), README §14. Steps 4 e 5 (ensaio e deploy) pendentes.
+
 
 ## Provedor: Featherless
 
