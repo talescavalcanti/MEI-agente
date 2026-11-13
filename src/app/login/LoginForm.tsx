@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login, type AuthState } from "../auth/actions";
@@ -15,12 +16,20 @@ export default function LoginForm() {
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="de" value={de} />
-      <AuthField label="Email" name="email" type="email" autoComplete="username" autoFocus />
+      <AuthField
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="username"
+        defaultValue={state?.email}
+        autoFocus={!state?.email}
+      />
       <AuthField
         label="Senha"
         name="password"
         type="password"
         autoComplete="current-password"
+        autoFocus={Boolean(state?.email)}
       />
 
       {state?.error && <AuthError>{state.error}</AuthError>}
@@ -28,6 +37,13 @@ export default function LoginForm() {
       <Button type="submit" disabled={pending} block>
         {pending ? "Entrando…" : "Entrar"}
       </Button>
+
+      <p className="text-center text-body-sm text-muted">
+        Ainda não tem conta?{" "}
+        <Link href="/cadastro" className="text-link font-medium text-brand-600">
+          Criar conta
+        </Link>
+      </p>
     </form>
   );
 }
