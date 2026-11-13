@@ -26,6 +26,16 @@ export type Mei = {
   chave_pix: string | null;
   /** Data e hora em texto ISO. */
   criado_em: string;
+  /** Dados fiscais (09-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
+  cnpj: string | null;
+  inscricao_municipal: string | null;
+  /** Município do prestador, para a NFS-e. */
+  municipio: string | null;
+  /** Código de tributação nacional (cTribNac): 6 dígitos. */
+  codigo_tributacao: string | null;
+  /** NBS: 9 dígitos. */
+  nbs: string | null;
+  descricao_padrao_nota: string | null;
 };
 
 /** Campos aceitos por `mei_salvar`. Campo ausente não apaga o que já estava. */
@@ -46,6 +56,8 @@ export type Cliente = {
   whatsapp: string | null;
   endereco: string | null;
   observacoes: string | null;
+  /** CPF (11 dígitos) ou CNPJ (14 posições, pode ser alfanumérico), em maiúsculas, com DV conferido. */
+  documento: string | null;
   criado_em: string;
   atualizado_em: string;
 };
@@ -224,7 +236,7 @@ export type Contrato = {
 
 export type MensagemCanal = "whatsapp" | "instagram";
 
-export type MensagemObjetivo = "confirmacao" | "envio_orcamento" | "lembrete" | "cobranca" | "post" | "outro";
+export type MensagemObjetivo = "confirmacao" | "envio_orcamento" | "lembrete" | "cobranca" | "post" | "outro" | "envio_nota";
 
 /** Linha de `mensagens`. */
 export type Mensagem = {
@@ -241,6 +253,8 @@ export type Mensagem = {
   aprovado_por: string | null;
   enviado_em: string | null;
   tarefa_id: string | null;
+  /** Nota enviada (objetivo `envio_nota`): sempre nota emitida do mesmo cliente. */
+  nota_id: string | null;
   criado_em: string;
   atualizado_em: string;
 };
@@ -256,6 +270,8 @@ export type MensagemNova = {
   cliente_id?: string;
   servico_id?: string;
   tarefa_id?: string;
+  /** Obrigatório com `envio_nota`; sem `cliente_id`, o cliente é o da nota. */
+  nota_id?: string;
 };
 
 /**
@@ -291,7 +307,7 @@ export type ItemVisto = {
   orcamento: NonNullable<DadosDocumento["orcamento"]> | null;
 };
 
-export type TarefaTipo = "follow_up_orcamento";
+export type TarefaTipo = "follow_up_orcamento" | "emitir_nota" | "corrigir_nota";
 
 export type TarefaStatus = "aberta" | "feita" | "ignorada";
 
@@ -327,6 +343,141 @@ export type PropostaPendente = {
 
 /** Linha de `tarefas_gerar_followups`: só as tarefas criadas nesta rodada. */
 export type FollowupGerado = {
+  mei_id: string;
+  tarefa_id: string;
+  servico_id: string;
+};
+
+// ---------------------------------------------------------------------------
+// Nota fiscal assistida e faturamento (09-fiscal.sql)
+// ---------------------------------------------------------------------------
+
+/** Retorno de `fiscal_parametros(p_ano)`. O limite muda por ano (LC 238/2026). */
+export type FiscalParametros = {
+  ano: number;
+  limite_anual: number;
+  /** Fração acima do limite que ainda não desenquadra retroativamente (0.2). */
+  tolerancia_excesso: number;
+  dias_para_emitir: number;
+  dias_duplicata: number;
+};
+
+/** Campos aceitos por `mei_dados_fiscais_salvar`. Campo ausente não apaga. */
+export type MeiDadosFiscais = {
+  cnpj?: string;
+  inscricao_municipal?: string;
+  municipio?: string;
+  /** Aceita pontos (`14.01.01`); gravado com 6 dígitos. */
+  codigo_tributacao?: string;
+  /** Aceita pontos (`1.2001.81.00`); gravado com 9 dígitos. */
+  nbs?: string;
+  descricao_padrao_nota?: string;
+};
+
+export type NotaStatus = "rascunho" | "aprovado" | "emitida" | "divergente" | "descartado" | "cancelada";
+
+export type NotaAvisoCodigo =
+  | "municipio_diferente"
+  | "possivel_duplicata"
+  | "limite_90"
+  | "limite_100"
+  | "pagamento_diferente";
+
+/** Aviso que exige confirmação antes de aprovar. */
+export type NotaAviso = { codigo: NotaAvisoCodigo; texto: string };
+
+/** Campo conferido entre o rascunho e a nota emitida. */
+export type NotaCampoConferido = "valor" | "tomador_documento" | "competencia" | "codigo_tributacao";
+
+/** `{campo: {esperado, emitido}}`, só com os campos que diferem. */
+export type NotaDiferencas = Partial<
+  Record<NotaCampoConferido, { esperado: string | number | null; emitido: string | number | null }>
+>;
+
+/** Linha de `notas_fiscais`. */
+export type NotaFiscal = {
+  id: string;
+  mei_id: string;
+  servico_id: string;
+  cliente_id: string;
+  /** Sequencial por MEI: 1, 2, 3... (não é o número da NFS-e). */
+  numero_seq: number;
+  valor: number;
+  parcial: boolean;
+  /** `AAAA-MM-DD` */
+  competencia: string;
+  descricao: string;
+  codigo_tributacao: string;
+  nbs: string | null;
+  municipio_prestacao: string | null;
+  tomador_documento: string;
+  avisos: NotaAviso[];
+  avisos_confirmados: boolean;
+  status: NotaStatus;
+  aprovado_em: string | null;
+  aprovado_por: string | null;
+  emitida_em: string | null;
+  numero_nfse: string | null;
+  chave_acesso: string | null;
+  conferencia: NotaDiferencas | null;
+  criado_em: string;
+  atualizado_em: string;
+};
+
+/** Retorno de `nota_decidir`: mesmo contrato do `item_decidir`. */
+export type NotaDecisao = { id: string; status: NotaStatus; mudou: boolean };
+
+/** Dados da nota emitida para `nota_registrar_emissao` (do XML ou digitados). */
+export type NotaEmissaoDados = {
+  numero_nfse: string;
+  chave_acesso?: string;
+  valor?: number;
+  tomador_documento?: string;
+  /** `AAAA-MM-DD` */
+  competencia?: string;
+  codigo_tributacao?: string;
+};
+
+/** Retorno de `nota_registrar_emissao`. */
+export type NotaEmissaoResultado = {
+  status: "emitida" | "divergente";
+  diferencas: NotaDiferencas;
+};
+
+/** Retorno de `nota_ver`. `mei` vem sem `user_id`. */
+export type NotaVista = {
+  nota: NotaFiscal;
+  mei: Omit<Mei, "user_id">;
+  cliente: Cliente;
+  servico: Servico;
+};
+
+/** Linha de `notas_listar`. */
+export type NotaListada = NotaFiscal & {
+  cliente_nome: string;
+  servico_numero: number;
+};
+
+export type FaixaFaturamento = "ok" | "atencao" | "alerta" | "excedido" | "excedido_grave";
+
+/** Retorno de `faturamento_ano`. */
+export type FaturamentoAno = {
+  ano: number;
+  /** Soma dos pagamentos recebidos no ano (America/Sao_Paulo). */
+  total: number;
+  /** Parte coberta por notas emitidas com competência no ano. */
+  com_nota: number;
+  sem_nota: number;
+  limite: number;
+  /** Total / limite, em %, com uma casa. */
+  percentual: number;
+  /** Projeção linear até 31/12 no ano corrente; ano fechado = total. */
+  projecao: number;
+  faixa: FaixaFaturamento;
+};
+
+/** Linha de `tarefas_gerar_notas`: só as tarefas criadas nesta rodada. */
+export type NotaTarefaGerada = {
   mei_id: string;
   tarefa_id: string;
   servico_id: string;
