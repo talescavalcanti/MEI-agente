@@ -114,7 +114,7 @@ A numeração segue a ordem tradicional de preenchimento do canvas: começa pelo
 #### 07 · Atividades principais
 *O que precisamos fazer bem?*
 
-- Evoluir o agente e suas 17 ferramentas
+- Evoluir o agente e suas 20 ferramentas
 - Garantir qualidade: testes, guardrails e auditoria
 - Controlar o custo de inferência por MEI
 - Validar fluxos e linguagem com MEIs reais
