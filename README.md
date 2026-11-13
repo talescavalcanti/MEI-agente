@@ -12,7 +12,7 @@ O MEI descreve o serviço em uma frase. O agente organiza o resto e só age com 
 <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-1f2328?style=flat-square&logo=nextdotjs&logoColor=white" />
 <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Postgres-1f2328?style=flat-square&logo=supabase&logoColor=white" />
 <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-1f2328?style=flat-square&logo=typescript&logoColor=white" />
-<img alt="Testes" src="https://img.shields.io/badge/testes-308%20passando-1f2328?style=flat-square" />
+<img alt="Testes" src="https://img.shields.io/badge/testes-381%20passando-1f2328?style=flat-square" />
 </p>
 
 <p>
@@ -75,6 +75,7 @@ Um agente com ferramentas, regras de negócio no banco e aprovação humana ante
 | [3. Exemplo de uso](#3-exemplo-de-uso) | [8. Escopo do MVP](#8-escopo-do-mvp) | [13. Estrutura do projeto](#13-estrutura-do-projeto) |
 | [4. Funcionalidades](#4-funcionalidades) | [9. Segurança, privacidade e LGPD](#9-segurança-privacidade-e-lgpd) | [14. Como rodar](#14-como-rodar) |
 | [5. Arquitetura](#5-arquitetura) | [10. Riscos e gaps](#10-riscos-e-gaps) | [15. O papel do AKCIT Camp](#15-o-papel-do-akcit-camp) |
+| [Business Model Canvas](docs/bmc.md) | [Equipe](#equipe) | [Licença](#licença) |
 
 <br/>
 
@@ -124,6 +125,24 @@ O agente não é só um chatbot que gera texto. Ele:
 
 > [!IMPORTANT]
 > A IA interpreta e prepara as ações. As regras de negócio garantem a consistência dos registros. Qualquer ação externa, como enviar uma mensagem ou um documento, só acontece depois da aprovação do usuário.
+
+#### Por que não usar o que já existe
+
+Hoje o MEI resolve isso com três tipos de ferramenta. Cada uma cobre só uma parte do caminho.
+
+| | Assistente de IA genérico | WhatsApp e planilha | App de gestão | **MEIagente** |
+|:---|:---:|:---:|:---:|:---:|
+| Entende uma frase solta, como "fechei um serviço de R$ 800 para sexta" | Sim | Não | Não | **Sim** |
+| Conhece os clientes, preços e histórico do negócio | Não | Em parte, à mão | Sim | **Sim** |
+| Registra cliente, serviço, agenda e pagamento | Não | À mão | Sim, por formulário | **Sim, a partir da conversa** |
+| Gera orçamento e contrato com os dados do negócio | Em parte, sem salvar | Não | Às vezes | **Sim** |
+| Lembra sozinho das propostas paradas | Não | Não | Raramente | **Sim** |
+| Pede aprovação antes de qualquer ação externa | Não se aplica | Não se aplica | Não se aplica | **Sim** |
+| Exige conhecimento técnico ou configuração | Saber escrever bons pedidos | Não | Aprender o sistema | **Não** |
+
+<sub>Comparação por categoria de ferramenta, sem citar produtos específicos.</sub>
+
+**Em resumo:** o assistente genérico escreve, mas não guarda nem acompanha nada. A planilha guarda, mas não faz nada sozinha. O app de gestão organiza, mas exige que o MEI preencha formulários. O MEIagente junta as três coisas a partir de uma conversa.
 
 <br/>
 
@@ -369,7 +388,7 @@ Foco no ciclo completo de atendimento, usando dados cadastrados e de demonstraç
 
 | Camada | Como | Situação |
 |:---|:---|:---|
-| **Testes automáticos** | 308 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos e a rota do chat, sem gastar crédito. | Passando |
+| **Testes automáticos** | 381 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos, a rota do chat, a base de conhecimento e o webhook da Meta, sem gastar crédito. | Passando |
 | **Aceitação com o modelo real** | `scripts/agente-smoke.ts` roda o cenário da seção 3 contra o modelo. Esperado: 3 cartões, serviço `confirmado` e nenhuma `entrada_invalida`. | Script pronto |
 | **Métricas de produto** | As da seção 11, medidas na fase de validação com MEIs reais. | Fase 2 |
 
@@ -490,6 +509,49 @@ O hackathon é a oportunidade de transformar a proposta em um protótipo tecnica
 | **Entrega alvo** | Uma jornada completa de atendimento, em que o agente interpreta a demanda, usa ferramentas, mantém contexto e sugere próximas ações. |
 | **Mentorias** | Avaliação de viabilidade técnica, custos de operação, experiência do usuário e evolução do produto. |
 | **Meta de negócio** | Uma solução economicamente acessível para microempreendedores, respeitando as limitações desse público. |
+
+<br/>
+
+## Equipe
+
+O MEIagente nasceu de uma dor real: o Tales, líder técnico da equipe, é MEI e vive a rotina que o produto quer simplificar. As funções abaixo refletem onde cada pessoa mais contribuiu no histórico do repositório.
+
+<table>
+<tr>
+<td width="25%" valign="top">
+
+**Tales Cavalcanti**<br/>
+<sub>Tech Lead · MEI</sub>
+
+Arquitetura do produto e núcleo do agente: laço, ferramentas, prompt, cliente do modelo e base de conhecimento. Integração com a Meta, fundação do app e deploy.
+
+</td>
+<td width="25%" valign="top">
+
+**Victor Julius**<br/>
+<sub>Backend e banco de dados</sub>
+
+Regras de negócio no SQL: serviços, agenda, pagamentos e máquina de estados; orçamento, contrato e aprovação; detecção de propostas paradas. Lidera o módulo de nota fiscal assistida.
+
+</td>
+<td width="25%" valign="top">
+
+**Otávio Leão**<br/>
+<sub>Frontend</sub>
+
+Interface do agente: chat com cartões de aprovação, leitura do streaming de eventos, criação de conta e login.
+
+</td>
+<td width="25%" valign="top">
+
+**Pedro Henrique**<br/>
+<sub>Integração, proatividade e documentação</sub>
+
+Rota de chat com streaming e acompanhamento de propostas paradas. Documentação, pesquisa de dados de mercado e Business Model Canvas.
+
+</td>
+</tr>
+</table>
 
 <br/>
 
