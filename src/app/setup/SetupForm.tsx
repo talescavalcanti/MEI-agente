@@ -26,7 +26,7 @@ export default function SetupForm() {
       {state?.error && <AuthError>{state.error}</AuthError>}
 
       <Button type="submit" disabled={pending} block>
-        {pending ? "Criando…" : "Criar administrador"}
+        {pending ? "Criando…" : "Criar conta e continuar"}
       </Button>
     </form>
   );

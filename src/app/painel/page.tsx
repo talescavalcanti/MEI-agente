@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireUser } from "@/lib/auth/dal";
+import { requireMei } from "@/lib/dominio/mei";
 import { APP_TZ } from "@/lib/tz";
 import EmptyModule from "./EmptyModule";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Início · MEIagente" };
  * O Início de verdade (pendências e próximas ações) chega com a proatividade.
  */
 export default async function Inicio() {
-  const me = await requireUser();
+  const { user: me } = await requireMei();
 
   return (
     <EmptyModule

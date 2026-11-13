@@ -130,5 +130,6 @@ export async function setupFirstAdmin(_prev: AuthState, formData: FormData): Pro
 
   await createSessionCookie({ sub: created.id, role: "admin", ver: 1 });
   dropClientCache();
-  redirect("/painel");
+  // Conta criada, negócio ainda não: o próximo passo do primeiro acesso.
+  redirect("/painel/negocio");
 }
