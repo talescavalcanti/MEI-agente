@@ -91,18 +91,41 @@ No Brasil, muitos MEIs acumulam funções: executam o serviço, atendem clientes
 
 É especialmente crítico para prestadores de serviço que trabalham sozinhos. O dia a dia costuma rodar em ferramentas desconectadas: WhatsApp, Instagram, planilhas e documentos soltos.
 
-#### O que dizem as pesquisas do Sebrae (recorte MEI)
+#### A dor administrativa
 
 | Indicador | Valor | Fonte |
 |:---|:---:|:---:|
-| Usam IA regularmente em marketing e comunicação | **29%** | [1] |
-| Já fizeram testes com IA | **23%** | [1] |
-| Não usam, mas pretendem usar em breve | **28%** | [1] |
-| Apontam como principal obstáculo não saber como aplicar IA no negócio | **23%** | [2] |
+| MEIs do **Nordeste** que apontam obstáculos para cumprir exigências administrativas e tributárias | **37%** | [1] |
+| A mesma dificuldade na média nacional | **32%** | [1] |
+| MEIs que não fazem o controle diário das receitas | **39%** | [2] |
+| MEIs que não fazem o controle diário das despesas | **33%** | [2] |
+
+Na pesquisa qualitativa *Dores dos Pequenos Negócios*, do Sebrae, a falta de tempo para cuidar da parte administrativa e comercial aparece entre os principais desafios [3].
+
+#### A IA ainda não chegou ao trabalho do dia a dia
+
+| Indicador (recorte MEI) | Valor | Fonte |
+|:---|:---:|:---:|
+| Usam IA regularmente em marketing e comunicação | **29%** | [4] |
+| Já fizeram testes com IA | **23%** | [4] |
+| Não usam, mas pretendem usar em breve | **28%** | [4] |
+| Apontam como principal obstáculo não saber como aplicar IA no negócio | **23%** | [5] |
+
+#### Tamanho do mercado
+
+| Indicador | Valor | Fonte |
+|:---|:---:|:---:|
+| MEIs ativos no Brasil em 2026 | **17 milhões** | [6] |
+| MEIs em atividade no setor de serviços, o público do MEIagente | **7,6 milhões** | [7] |
 
 <sub>
-[1] Sebrae, <i>Pulso dos Pequenos Negócios</i>, 13ª edição (nov/2026). <a href="https://agenciasebrae.com.br/?p=43963">agenciasebrae.com.br</a><br/>
-[2] Sebrae, FGV IBRE e Google. Coleta em set/2025, cerca de 5.000 empresas (jan/2026). <a href="https://agenciasebrae.com.br/dados/pequenos-negocios-abracam-a-inteligencia-artificial-para-otimizar-o-tempo-e-inovar/">agenciasebrae.com.br</a><br/>
+[1] FGV em parceria com o Sebrae, divulgado em out/2026. <a href="https://movimentoeconomico.com.br/economia/lei-de-incentivos/tributacao/2026/10/22/nordeste-concentra-maior-dificuldade-burocratica-entre-meis-aponta-pesquisa/">Movimento Econômico</a><br/>
+[2] Sebrae, <i>Educação Financeira do MEI</i>, 2018, mil entrevistas. <a href="https://www.bcb.gov.br/Nor/relcidfin/docs/art9_educacao_finanaceira_MEIs.pdf">Banco Central</a><br/>
+[3] Sebrae, <i>Dores dos Pequenos Negócios</i>, pesquisa qualitativa, jan/2023. <a href="https://datasebrae.com.br/wp-content/uploads/2024/10/Pesquisa-Dores-dos-Pequenos-Negocios_Jan2023-resumo.pdf">Data Sebrae</a><br/>
+[4] Sebrae, <i>Pulso dos Pequenos Negócios</i>, 13ª edição (nov/2026). <a href="https://agenciasebrae.com.br/?p=43963">Agência Sebrae</a><br/>
+[5] Sebrae, FGV IBRE e Google. Coleta em set/2025, cerca de 5.000 empresas (jan/2026). <a href="https://agenciasebrae.com.br/dados/pequenos-negocios-abracam-a-inteligencia-artificial-para-otimizar-o-tempo-e-inovar/">Agência Sebrae</a><br/>
+[6] Portal do Empreendedor, em estudo da Fecomércio MG (jul/2026): 17.075.033 MEIs ativos. <a href="https://fecomerciomg.org.br/wp-content/uploads/2026/07/Estudo-sobre-o-MEI-2026.pdf">Fecomércio MG</a><br/>
+[7] Sebrae, com dados da Receita Federal (mar/2026), que contam cerca de 13,1 milhões de MEIs em atividade. <a href="https://melhorinvestimento.net/noticias/recorde-meis-brasil-2025-pejotizacao">Melhor Investimento</a><br/>
 Em Pernambuco, 25% dos empreendedores usam IA regularmente em marketing e comunicação e 32% planejam usar em breve (Pulso, 13ª edição). <a href="https://www.diariodepernambuco.com.br/economia/2026/10/11726740-pesquisa-do-sebrae-indica-que-25-dos-empreendedores-pernambucanos-usam-ia-nos-negocios.html">Diário de Pernambuco</a>
 </sub>
 
@@ -149,6 +172,20 @@ Hoje o MEI resolve isso com três tipos de ferramenta. Cada uma cobre só uma pa
 <sub>Comparação por categoria de ferramenta, sem citar produtos específicos.</sub>
 
 **Em resumo:** o assistente genérico escreve, mas não guarda nem acompanha nada. A planilha guarda, mas não faz nada sozinha. O app de gestão organiza, mas exige que o MEI preencha formulários. O MEIagente junta as três coisas a partir de uma conversa.
+
+#### Referência de preço
+
+O MEI já paga por ferramentas mais simples. A faixa do MEIagente acompanha o que esse público aceita hoje, bem abaixo de um ERP.
+
+| Ferramenta | Preço mensal | O que oferece |
+|:---|:---:|:---|
+| Qipu, plano MEI | R$ 18,90 | Gestão financeira, DAS, nota de serviço, orçamentos e cobranças |
+| Company Hero, plano MEI | R$ 29,90 | Regularidade do CNPJ e alertas do DAS |
+| Nota Rápida (MarketUP), premium | R$ 49,99 | Nota de serviço e orçamentos pelo celular |
+| ERPs para pequenas empresas | R$ 119 a R$ 169 | Gestão completa, pensada para empresas maiores |
+| **MEIagente** | **R$ 19 a R$ 39** | **Tudo a partir de uma conversa, com aprovação do MEI. Faixa a validar com MEIs** |
+
+<sub>Preços públicos consultados em 13/11/2026: <a href="https://www.serasaexperian.com.br/conteudos/plataformas-gestao-financeira-melhor-custo-beneficio/">Serasa Experian (Qipu)</a>, <a href="https://www.companyhero.com/plano-mei-hero-money-drop">Company Hero</a>, <a href="https://apps.apple.com/br/app/nota-r%C3%A1pida-nfse-mei-mobile/id6444369771">App Store (Nota Rápida)</a> e <a href="https://www.serasaexperian.com.br/conteudos/melhor-app-controlar-financas-empresa/">Serasa Experian (ERPs)</a>.</sub>
 
 <br/>
 
@@ -395,7 +432,7 @@ Foco no ciclo completo de atendimento, usando dados cadastrados e de demonstraç
 
 | Camada | Como | Situação |
 |:---|:---|:---|
-| **Testes automáticos** | 505 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos, a rota do chat, a base de conhecimento e o webhook da Meta, sem gastar crédito. | Passando |
+| **Testes automáticos** | 584 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos, a rota do chat, a base de conhecimento e o webhook da Meta, sem gastar crédito. | Passando |
 | **Aceitação com o modelo real** | `scripts/agente-smoke.ts` roda o cenário da seção 3 contra o modelo. Esperado: 3 cartões, serviço `confirmado` e nenhuma `entrada_invalida`. | Script pronto |
 | **Métricas de produto** | As da seção 11, medidas na fase de validação com MEIs reais. | Fase 2 |
 
