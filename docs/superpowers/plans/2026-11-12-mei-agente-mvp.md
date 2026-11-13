@@ -99,13 +99,13 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 **Interfaces:**
 - Produces: `db` (`@/lib/supabase`), `env` com `supabaseUrl, supabaseServiceKey, appUrl, cronSecret, sessionSecret, agenteModelo e featherlessApiKey (obrigatórias), limiteDiarioTokens (default 400000)`; `requireUser(): Promise<SessionUser>`, `requireUserApi()`, `PRIVATE_HEADERS`; `SessionUser = { id, email, name, role }`; cookie `mei_session`.
 
-- [ ] **Step 1:** Copiar os arquivos. Remover: `ig_account_id` (de `users.ts`, `dal.ts`, `auth.sql`), `getActiveAccount`/`canAccessAccount`/`requireAccountApi`, cookie de conta ativa, `assignAccount`, rotas abertas do proxy que não existem aqui. `SESSION_COOKIE = "mei_session"`. Trocar "meu-chat" por "MEIagente" em títulos e `Wordmark`.
-- [ ] **Step 2:** `.env.example` com `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`, `CRON_SECRET`, `SESSION_SECRET`, `FEATHERLESS_API_KEY`, `AGENTE_MODELO`, `AGENTE_LIMITE_DIARIO_TOKENS` (sem valores).
-- [ ] **Step 3:** `/api/health`: `200 {status:"ok"}` quando `select 1` em `users` responde, `503` quando não.
-- [ ] **Step 4:** `PainelShell` com o menu novo: Início `/painel`, Agente `/painel/agente`, Clientes, Serviços, Agenda, Documentos, Mensagens, Meu negócio `/painel/negocio`. Props reduzidas a `{ userName, navCounts?, children }`.
-- [ ] **Step 5:** `tests/fundacao.test.ts`: `signSession` + `verifySession` devolve o mesmo `sub`; token adulterado devolve `null`.
-- [ ] **Step 6:** Verificar. Run: `npm test && npm run lint && npm run build`. Expected: tudo passa; `grep -ri "ig_account\|instagram\|oauth" src/` não retorna nada.
-- [ ] **Step 7:** Commit `feat: fundacao do app a partir do meu-chat`.
+- [x] **Step 1:** Copiar os arquivos. Remover: `ig_account_id` (de `users.ts`, `dal.ts`, `auth.sql`), `getActiveAccount`/`canAccessAccount`/`requireAccountApi`, cookie de conta ativa, `assignAccount`, rotas abertas do proxy que não existem aqui. `SESSION_COOKIE = "mei_session"`. Trocar "meu-chat" por "MEIagente" em títulos e `Wordmark`.
+- [x] **Step 2:** `.env.example` com `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`, `CRON_SECRET`, `SESSION_SECRET`, `FEATHERLESS_API_KEY`, `AGENTE_MODELO`, `AGENTE_LIMITE_DIARIO_TOKENS` (sem valores).
+- [x] **Step 3:** `/api/health`: `200 {status:"ok"}` quando `select 1` em `users` responde, `503` quando não.
+- [x] **Step 4:** `PainelShell` com o menu novo: Início `/painel`, Agente `/painel/agente`, Clientes, Serviços, Agenda, Documentos, Mensagens, Meu negócio `/painel/negocio`. Props reduzidas a `{ userName, navCounts?, children }`.
+- [x] **Step 5:** `tests/fundacao.test.ts`: `signSession` + `verifySession` devolve o mesmo `sub`; token adulterado devolve `null`.
+- [x] **Step 6:** Verificar. Run: `npm test && npm run lint && npm run build`. Expected: tudo passa; `grep -ri "ig_account\|instagram\|oauth" src/` não retorna nada.
+- [x] **Step 7:** Commit `feat: fundacao do app a partir do meu-chat`.
 
 ### Task 2: Banco de teste (PGlite) e SQL de auth
 
