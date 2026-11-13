@@ -48,7 +48,7 @@ Verificação do `developer` em e94f613 (relatório do builder-02): `npm test` 3
 
 **Do dono:**
 1. Smoke real do modelo: `JITI_ALIAS='{"@":"./src","server-only":"./tests/helpers/vazio.ts"}' npx jiti scripts/agente-smoke.ts --confirmo` e de novo com `--sem-streaming`.
-2. Cadastrar o webhook no painel da Meta (o verify token não pode passar pelo agente): Instagram → API setup with Unified login → Configurar webhooks, URL `https://meiagente.talescavalcanti.dev/api/meta/webhook`, campo `messages`. O handshake em produção já foi testado (200).
+2. Publicar o app na Meta (modo Live) depois que `/privacidade` e `/exclusao-de-dados` estiverem no ar (builder-03, `feat/paginas-legais`). Webhook já cadastrado pelo dono, campo `messages` assinado e @avoralabss.br inscrita no app (`POST /{ig-id}/subscribed_apps`, 13/11). DMs reais não chegam em `dev_mode`: a Meta exige app publicado.
 3. `90-cron.sql` no Supabase, com `<APP_URL>` e `<CRON_SECRET>` trocados (sem commitar).
 4. Revogar na Featherless a chave antiga `rc_0d88…7341`, que está no histórico do git (o repo agora é **público**). A chave atual é outra.
 

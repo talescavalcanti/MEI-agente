@@ -12,6 +12,12 @@ const mei: Mei = {
   telefone: "62999990000",
   chave_pix: "ana@exemplo.com",
   criado_em: "2026-11-01T12:00:00Z",
+  cnpj: null,
+  inscricao_municipal: null,
+  municipio: null,
+  codigo_tributacao: null,
+  nbs: null,
+  descricao_padrao_nota: null,
 };
 
 describe("PROMPT_SISTEMA", () => {
@@ -33,6 +39,11 @@ describe("PROMPT_SISTEMA", () => {
       "salvar_memoria",
       "contexto_do_negocio",
       "orientação jurídica",
+      "preparar_nota_fiscal",
+      "salvar_documento_cliente",
+      "consultar_faturamento",
+      "Emissor Nacional",
+      "Meu negócio",
       "consultar_conhecimento",
     ]) {
       expect(PROMPT_SISTEMA).toContain(trecho);
@@ -41,6 +52,10 @@ describe("PROMPT_SISTEMA", () => {
 
   it("é enxuto (modelo com 32k de contexto)", () => {
     expect(PROMPT_SISTEMA.length).toBeLessThan(3000);
+  });
+
+  it("nunca deixa o modelo dizer que emitiu a nota", () => {
+    expect(PROMPT_SISTEMA).toMatch(/[Nn]unca diga que emitiu/);
   });
 
   it("não usa travessão", () => {

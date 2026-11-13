@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NFS-e de exemplo para teste, montada a partir do XSD oficial do padrão
+  nacional v1.01 (NFSe_v1.01.xsd, pacote nfse-esquemas_xsd-v1-01-20260209.zip,
+  https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual,
+  consultado em 13/11/2026). A documentação oficial não traz XML de exemplo de
+  NFS-e emitida. Este arquivo foi conferido com um validador XSD (xmlschema)
+  contra o NFSe_v1.01.xsd; os dados são fictícios (CNPJs com dígito
+  verificador correto e sem dono real, chave sem DV calculado, assinatura de
+  mentira). O único erro do validador é em `serie`: o pattern oficial
+  `^0{0,4}\d{1,5}$` usa ^ e $, que em regex de XSD são caracteres literais,
+  então nenhum valor passa nessa validação estrita.
+-->
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS52087072212345678000195000000000004226111234567890">
+    <xLocEmi>Goiânia</xLocEmi>
+    <xLocPrestacao>Goiânia</xLocPrestacao>
+    <nNFSe>42</nNFSe>
+    <cLocIncid>5208707</cLocIncid>
+    <xLocIncid>Goiânia</xLocIncid>
+    <xTribNac>Lubrificação, limpeza, lustração, revisão, carga e recarga, conserto, restauração, blindagem, manutenção e conservação de máquinas, veículos, aparelhos, equipamentos, motores, elevadores ou de qualquer objeto (exceto peças e partes empregadas, que ficam sujeitas ao ICMS).</xTribNac>
+    <xNBS>Serviços de manutenção e reparação de aparelhos eletroeletrônicos domésticos</xNBS>
+    <verAplic>EmissorWeb_1.0</verAplic>
+    <ambGer>2</ambGer>
+    <tpEmis>1</tpEmis>
+    <procEmi>2</procEmi>
+    <cStat>107</cStat>
+    <dhProc>2026-11-10T14:32:05-03:00</dhProc>
+    <nDFSe>123456</nDFSe>
+    <emit>
+      <CNPJ>12345678000195</CNPJ>
+      <xNome>REFRIGERACAO BUENO LTDA</xNome>
+      <enderNac>
+        <xLgr>Rua T-30</xLgr>
+        <nro>100</nro>
+        <xBairro>Setor Bueno</xBairro>
+        <cMun>5208707</cMun>
+        <UF>GO</UF>
+        <CEP>74210060</CEP>
+      </enderNac>
+    </emit>
+    <valores>
+      <vLiq>1500.00</vLiq>
+    </valores>
+    <DPS versao="1.01">
+      <infDPS Id="DPS520870721234567800019500001000000000000042">
+        <tpAmb>1</tpAmb>
+        <dhEmi>2026-11-10T14:31:50-03:00</dhEmi>
+        <verAplic>EmissorWeb_1.0</verAplic>
+        <serie>00001</serie>
+        <nDPS>42</nDPS>
+        <dCompet>2026-11-08</dCompet>
+        <tpEmit>1</tpEmit>
+        <cLocEmi>5208707</cLocEmi>
+        <prest>
+          <CNPJ>12345678000195</CNPJ>
+          <regTrib>
+            <opSimpNac>2</opSimpNac>
+            <regEspTrib>0</regEspTrib>
+          </regTrib>
+        </prest>
+        <toma>
+          <CNPJ>11222333000181</CNPJ>
+          <xNome>CONDOMINIO EDIFICIO EXEMPLO</xNome>
+        </toma>
+        <serv>
+          <locPrest>
+            <cLocPrestacao>5208707</cLocPrestacao>
+          </locPrest>
+          <cServ>
+            <cTribNac>140101</cTribNac>
+            <xDescServ>Manutenção preventiva de 3 aparelhos de ar-condicionado split</xDescServ>
+            <cNBS>120018100</cNBS>
+          </cServ>
+        </serv>
+        <valores>
+          <vServPrest>
+            <vServ>1500.00</vServ>
+          </vServPrest>
+          <trib>
+            <tribMun>
+              <tribISSQN>1</tribISSQN>
+              <tpRetISSQN>1</tpRetISSQN>
+            </tribMun>
+            <totTrib>
+              <indTotTrib>0</indTotTrib>
+            </totTrib>
+          </trib>
+        </valores>
+      </infDPS>
+    </DPS>
+  </infNFSe>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+      <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+      <Reference URI="#NFS52087072212345678000195000000000004226111234567890">
+        <Transforms>
+          <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+          <Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+        </Transforms>
+        <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+        <DigestValue>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>AAAA</SignatureValue>
+  </Signature>
+</NFSe>
