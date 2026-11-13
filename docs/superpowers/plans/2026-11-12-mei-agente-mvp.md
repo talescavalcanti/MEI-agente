@@ -300,15 +300,25 @@ Regras do executor: validar `entrada` com o `esquema` da ferramenta (falha → `
 
 Comportamento: checa `uso_hoje >= limiteDiario` antes de chamar o modelo (emite `erro` "Você atingiu o limite de uso de hoje."); grava a mensagem do usuário; a cada volta chama `llm.turno`, soma uso; `fim` → grava as mensagens do assistente e emite `fim`; `ferramentas` → executa todas as chamadas, grava **na mesma operação** as mensagens do assistente e a mensagem de `llm.resultado(...)` com todos os resultados, registra `agente_acoes`, emite `ferramenta`/`cartao`; `filtro`, `limite`, `outro` ou estouro de `MAX_VOLTAS` → não executa ferramentas daquela volta, não grava a volta incompleta, emite `erro`. Os cartões do turno vão no `cartoes` da última mensagem do assistente.
 
-- [ ] **Step 1:** Testes com `llmFalso(roteiro)`:
+- [x] **Step 1:** Testes com `llmFalso(roteiro)`:
   - texto simples → 2 linhas em `conversa_mensagens`, evento `fim`.
   - chamada de `registrar_servico` → `fim`: 4 linhas (usuário, assistente, resultados, assistente), 1 linha em `agente_acoes`, uso somado das duas voltas.
   - duas chamadas na mesma volta → **uma** mensagem de resultados com as duas.
   - as mensagens devolvidas por `turno` na volta 1 chegam à volta 2 idênticas (`deepEqual`), inclusive partes que o laço não entende.
   - **Review Focus 4:** `motivo: "filtro"` com chamadas no retorno → nenhuma ferramenta executada, evento `erro`, e a conversa relida tem toda chamada pareada com resultado; modelo que pede ferramenta para sempre → para em 8 voltas com `erro`, histórico pareado; `llm.turno` que lança → evento `erro`, mensagem do usuário preservada, próxima chamada de `rodarTurno` na mesma conversa funciona.
   - uso do dia acima do limite → `llm.turno` não é chamado.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: laco do agente com historico, auditoria e limite`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: laco do agente com historico, auditoria e limite`.
+- **Decisões da execução (PR #13), valem para T11, T13 e T15:**
+  - `conversa_anexar_varias(p_mei, p_conversa, p_mensagens jsonb)` grava assistente + resultados numa transação; `conversa_anexar` usa ela por dentro.
+  - Os cartões ficam no `cartoes` da mensagem do assistente **da volta que criou o item**, não só na última. Ao recarregar (T13), juntar os cartões de todas as linhas do assistente entre um `user` e o próximo e mostrar no fim do turno.
+  - `erro` não encerra o stream: `fim` sai sempre que há conversa válida, inclusive depois de erro, e traz o `conversaId`. Sem conversa (limite diário em conversa nova, conversa de outro MEI) não há `fim` e `rodarTurno` devolve `conversaId` vazio. `rodarTurno` nunca lança.
+  - Limite diário checado antes de gravar qualquer coisa; a mensagem do usuário não é gravada nesse caso.
+  - O título da conversa ignora o bloco `<contexto_do_negocio>`, então a T11 pode prefixá-lo ao texto antes de chamar `rodarTurno`.
+  - Mensagem de erro do `llm.turno` vai direto ao usuário: o `llm.ts` precisa lançar em português.
+  - `item_decidir` grava `agente_acoes` (tipo `decisao`) só quando o item mudou.
+  - Tipos `Conversa` e `ConversaMensagem` ficam em `src/lib/agente/conversas.ts`.
+  - Sem trava para dois turnos simultâneos na mesma conversa (duas abas): pendência conhecida.
 
 ### Task 10: Cliente do modelo, prompt e contexto
 
