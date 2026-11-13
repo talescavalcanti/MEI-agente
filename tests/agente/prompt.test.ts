@@ -12,6 +12,12 @@ const mei: Mei = {
   telefone: "62999990000",
   chave_pix: "ana@exemplo.com",
   criado_em: "2026-11-01T12:00:00Z",
+  cnpj: null,
+  inscricao_municipal: null,
+  municipio: null,
+  codigo_tributacao: null,
+  nbs: null,
+  descricao_padrao_nota: null,
 };
 
 describe("PROMPT_SISTEMA", () => {

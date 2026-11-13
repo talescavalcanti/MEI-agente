@@ -148,6 +148,7 @@ function mensagem(campos: Partial<Mensagem> = {}): Mensagem {
     aprovado_por: null,
     enviado_em: null,
     tarefa_id: null,
+    nota_id: null,
     criado_em: "2026-11-13T12:00:00Z",
     atualizado_em: "2026-11-13T12:00:00Z",
     ...campos,
