@@ -14,7 +14,8 @@
 -- Este arquivo também altera, de forma idempotente, tabelas de 02, 04 e 05:
 --   meis      + cnpj, inscricao_municipal, municipio, codigo_tributacao, nbs,
 --               descricao_padrao_nota
---   clientes  + documento (CPF/CNPJ só dígitos), único por MEI
+--   clientes  + documento (CPF/CNPJ normalizado, CNPJ pode ser alfanumérico),
+--               único por MEI
 --   tarefas   tipo aceita 'emitir_nota' e 'corrigir_nota'
 --   mensagens objetivo aceita 'envio_nota'; + nota_id; trigger de envio de nota
 --   e redefine mensagem_rascunhar (04) para aceitar `nota_id`.
@@ -57,7 +58,8 @@
 --    https://www.gov.br/nfse
 -- Formatos (builder da 17b, XSD oficial tiposSimples_v1.01.xsd): cTribNac =
 -- 6 dígitos (a planilha oficial grava sem zero à esquerda: lpad 6); cNBS = 9
--- dígitos; CPF 11 e CNPJ 14 dígitos.
+-- dígitos; CPF 11 dígitos; CNPJ 14 posições (alfanumérico desde julho de
+-- 2026, IN RFB 2.229/2024; ver documento_valido).
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -72,7 +74,8 @@ alter table public.meis
   add column if not exists nbs                   text,
   add column if not exists descricao_padrao_nota text;
 
--- CPF (11) ou CNPJ (14), só dígitos, já conferido por documento_valido.
+-- CPF (11) ou CNPJ (14, pode ser alfanumérico), normalizado em maiúsculas
+-- por documento_valido. Tamanho 14 = pessoa jurídica.
 alter table public.clientes add column if not exists documento text;
 
 create unique index if not exists clientes_mei_documento_idx
@@ -168,8 +171,18 @@ begin
 end;
 $$;
 
--- Dígitos do CPF (11) ou CNPJ (14) se os dígitos verificadores baterem e não
--- for sequência repetida; senão null. Aceita pontos, barra e traço.
+-- Documento normalizado (maiúsculas, sem pontos, barra, traço e espaços) se
+-- for CPF (11 dígitos) ou CNPJ (14 posições) com dígitos verificadores
+-- corretos; senão null.
+--   CPF: só dígitos; sequência repetida (111.111.111-11) é recusada.
+--   CNPJ: 12 posições [0-9A-Z] (raiz 8 + ordem 4) + 2 DVs numéricos. Desde
+--   julho de 2026 a Receita emite CNPJ alfanumérico (IN RFB 2.229/2024); o DV
+--   usa o valor (código ASCII - 48) de cada caractere, então dígito vale ele
+--   mesmo e A=17 ... Z=42, com os pesos e o módulo 11 do CNPJ numérico.
+--   Exemplo oficial: 12.ABC.345/01DE-35. Sequência repetida só é recusada no
+--   CNPJ só numérico.
+--   https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/cnpj/cnpj-alfanumerico.pdf
+-- O mesmo algoritmo está em src/lib/fiscal/documento.ts (Task 17b).
 create or replace function public.documento_valido(p_doc text)
 returns text
 language plpgsql
@@ -177,16 +190,16 @@ immutable
 set search_path = ''
 as $$
 declare
-  d text := regexp_replace(coalesce(p_doc, ''), '\D', '', 'g');
+  d text := upper(regexp_replace(coalesce(p_doc, ''), '[\s./-]', '', 'g'));
   n int[];
   w int[] := array[6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   s int;
   r int;
 begin
-  if length(d) not in (11, 14) or d ~ '^(\d)\1*$' then
+  if not (d ~ '^\d{11}$' or d ~ '^[0-9A-Z]{12}\d{2}$') or d ~ '^(\d)\1*$' then
     return null;
   end if;
-  n := array(select substr(d, i, 1)::int from generate_series(1, length(d)) as i);
+  n := array(select ascii(substr(d, i, 1)) - 48 from generate_series(1, length(d)) as i);
 
   if length(d) = 11 then
     -- CPF: pesos 10..2 e 11..2; resto de (soma * 10) / 11, 10 vira 0.
@@ -687,7 +700,8 @@ begin
     end if;
   end if;
 
-  v_doc := nullif(regexp_replace(coalesce(p_dados->>'tomador_documento', ''), '\D', '', 'g'), '');
+  -- Mesma normalização do documento_valido (CNPJ pode ter letras).
+  v_doc := nullif(upper(regexp_replace(coalesce(p_dados->>'tomador_documento', ''), '[\s./-]', '', 'g')), '');
   if v_doc is not null and v_doc <> v_nota.tomador_documento then
     v_dif := v_dif || jsonb_build_object('tomador_documento',
       jsonb_build_object('esperado', v_nota.tomador_documento, 'emitido', v_doc));
@@ -909,7 +923,7 @@ end;
 $$;
 
 -- Agendador (todos os MEIs): abre tarefa `emitir_nota` para serviço pago de
--- cliente PJ (documento de 14 dígitos), pago há `p_dias` ou mais (nulo =
+-- cliente PJ (documento de 14 posições), pago há `p_dias` ou mais (nulo =
 -- dias_para_emitir), sem nota ativa e sem tarefa emitir_nota anterior (aberta,
 -- feita ou ignorada: o usuário já foi lembrado). Devolve só as novas.
 create or replace function public.tarefas_gerar_notas(p_dias int default null)

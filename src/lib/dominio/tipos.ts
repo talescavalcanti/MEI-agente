@@ -26,7 +26,7 @@ export type Mei = {
   chave_pix: string | null;
   /** Data e hora em texto ISO. */
   criado_em: string;
-  /** Dados fiscais (08-fiscal.sql). CNPJ só com dígitos. */
+  /** Dados fiscais (08-fiscal.sql). CNPJ normalizado em maiúsculas (pode ser alfanumérico). */
   cnpj: string | null;
   inscricao_municipal: string | null;
   /** Município do prestador, para a NFS-e. */
@@ -56,7 +56,7 @@ export type Cliente = {
   whatsapp: string | null;
   endereco: string | null;
   observacoes: string | null;
-  /** CPF (11) ou CNPJ (14), só dígitos, com dígitos verificadores conferidos. */
+  /** CPF (11 dígitos) ou CNPJ (14 posições, pode ser alfanumérico), em maiúsculas, com DV conferido. */
   documento: string | null;
   criado_em: string;
   atualizado_em: string;

@@ -29,6 +29,8 @@ const CNPJ_MEI = "11.222.333/0001-81";
 const CNPJ_CLIENTE = "11.444.777/0001-61";
 const CNPJ_OUTRO = "19131243000197";
 const CPF = "529.982.247-25";
+// Exemplo oficial da Receita (perguntas e respostas do CNPJ alfanumérico).
+const CNPJ_ALFA = "12.ABC.345/01DE-35";
 
 const regra = (frase?: string) => (frase ? `regra: ${frase}` : /^regra: /);
 
@@ -129,22 +131,57 @@ describe("schema", () => {
   });
 });
 
-describe("documento_valido", () => {
-  it("CPF e CNPJ válidos passam, com ou sem pontuação", async () => {
-    expect(await docValido(CPF)).toBe("52998224725");
-    expect(await docValido("52998224725")).toBe("52998224725");
-    expect(await docValido(CNPJ_MEI)).toBe("11222333000181");
-    expect(await docValido(CNPJ_OUTRO)).toBe(CNPJ_OUTRO);
-  });
+// Mesmos casos de tests/fiscal/documento.test.ts (Task 17b, documentoValido em
+// TS): os dois algoritmos precisam aceitar e recusar exatamente as mesmas
+// entradas. [entrada, esperado]
+const CASOS_DOCUMENTO: [string | null, string | null][] = [
+  // CPF e CNPJ válidos conhecidos
+  ["52998224725", "52998224725"],
+  ["12345678909", "12345678909"],
+  ["11222333000181", "11222333000181"],
+  ["12345678000195", "12345678000195"],
+  // formatação com pontos, traço, barra e espaço
+  ["529.982.247-25", "52998224725"],
+  [" 11.222.333/0001-81 ", "11222333000181"],
+  // um dígito trocado
+  ["52998224724", null],
+  ["52998224735", null],
+  ["11222333000182", null],
+  ["11222333000191", null],
+  ["62998224725", null],
+  // sequência repetida, mesmo com DV que fecha
+  ["111.111.111-11", null],
+  ["00000000000", null],
+  ["99999999999", null],
+  ["00000000000000", null],
+  ["11111111111111", null],
+  // tamanho errado, vazio ou nulo
+  ["", null],
+  ["5299822472", null],
+  ["529982247250", null],
+  ["1122233300018", null],
+  ["112223330001810", null],
+  [null, null],
+  // CNPJ alfanumérico (IN RFB 2.229/2024): exemplo oficial Serpro/Receita
+  ["12.ABC.345/01DE-35", "12ABC34501DE35"],
+  ["12ABC34501DE35", "12ABC34501DE35"],
+  ["12.abc.345/01de-35", "12ABC34501DE35"],
+  // um caractere trocado
+  ["12ABD34501DE35", null],
+  ["12ABC34501DE36", null],
+  ["12ABC34501DF35", null],
+  // DV com letra, CPF com letra ou caractere estranho
+  ["12ABC34501DE3A", null],
+  ["5299822472A", null],
+  ["12ABC34501DE#35", null],
+  ["529.982.247-25abc", null],
+];
 
-  it("dígito trocado, sequência repetida, tamanho errado ou vazio → null", async () => {
-    expect(await docValido("529.982.247-15")).toBeNull();
-    expect(await docValido("11.222.333/0001-82")).toBeNull();
-    expect(await docValido("111.111.111-11")).toBeNull();
-    expect(await docValido("00000000000000")).toBeNull();
-    expect(await docValido("1234567890")).toBeNull();
-    expect(await docValido("")).toBeNull();
-    expect(await docValido(null)).toBeNull();
+describe("documento_valido", () => {
+  it("aceita e recusa exatamente os mesmos casos do documentoValido (17b)", async () => {
+    const obtido = [];
+    for (const [entrada] of CASOS_DOCUMENTO) obtido.push([entrada, await docValido(entrada)]);
+    expect(obtido).toEqual(CASOS_DOCUMENTO);
   });
 });
 
@@ -191,6 +228,11 @@ describe("mei_dados_fiscais_salvar", () => {
     expect(m2).toMatchObject({ codigo_tributacao: "010101", cnpj: "11222333000181", nbs: "120018100" });
   });
 
+  it("aceita CNPJ alfanumérico, gravado em maiúsculas", async () => {
+    const mei = await criarMei(b);
+    expect((await dadosFiscais(mei, { cnpj: "12.abc.345/01de-35" })).cnpj).toBe("12ABC34501DE35");
+  });
+
   it("CNPJ inválido, CPF no lugar de CNPJ, código ou NBS fora do formato → regra", async () => {
     const mei = await criarMei(b);
     await expect(dadosFiscais(mei, { cnpj: "11.222.333/0001-82" })).rejects.toThrow(regra("CNPJ do negócio inválido"));
@@ -211,6 +253,28 @@ describe("cliente_documento_salvar (Review Focus 3)", () => {
     await expect(salvarDoc(mei, c.id, "52998224725")).rejects.toThrow(
       regra("já existe outro cliente com esse CPF/CNPJ"),
     );
+  });
+
+  it("CNPJ alfanumérico: normalizado, conta como PJ e entra na conferência da emissão", async () => {
+    const mei = await meiFiscal();
+    const c = await clienteCom(mei, null);
+    expect((await salvarDoc(mei, c.id, "12.abc.345/01de-35")).documento).toBe("12ABC34501DE35");
+    await expect(salvarDoc(mei, c.id, "12.ABC.345/01DF-35")).rejects.toThrow(regra("CPF ou CNPJ inválido"));
+
+    const s = await servicoDe(mei, c.id);
+    const n = await preparar(mei, s.id);
+    expect(n.tomador_documento).toBe("12ABC34501DE35");
+    await decidir(mei, n.id, "aprovar", await dono(mei));
+    // Mesmo documento formatado e minúsculo bate; outro documento diverge.
+    expect(await registrar(mei, n.id, { numero_nfse: "1", tomador_documento: "12.abc.345/01de-35" })).toEqual({
+      status: "emitida",
+      diferencas: {},
+    });
+
+    await b.q(`update public.pagamentos set criado_em = now() - interval '6 days' where servico_id = $1`, [s.id]);
+    const s2 = await servicoDe(mei, c.id, 900);
+    await b.q(`update public.pagamentos set criado_em = now() - interval '6 days' where servico_id = $1`, [s2.id]);
+    expect(await gerarTarefas()).toEqual([expect.objectContaining({ servico_id: s2.id })]);
   });
 
   it("cliente de outro MEI → regra: cliente não encontrado", async () => {
