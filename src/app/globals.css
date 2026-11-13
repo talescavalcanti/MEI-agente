@@ -1,0 +1,792 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   MEIagente — design system herdado do meu-chat (LANDING-DESIGN-SYSTEM.md)
+   --------------------------------------------------------------------------
+   O documento descreve uma landing page. Este é o **dialeto de painel** do
+   mesmo sistema: mesma marca, mesma tipografia, mesma assinatura de sombra e
+   os mesmos easings, mas com a densidade que uma tela de trabalho pede.
+
+   O que muda em relação à LP, e por quê:
+
+   - **Peso.** A LP força `font-weight: 300 !important` em tudo (§0.1) porque
+     lá a hierarquia se faz por escala — títulos de 8rem. Num painel os
+     títulos vivem entre 0.9 e 2rem, e nessa faixa 300 não separa nada. Fora
+     da `.landing-page` o próprio sistema já usa 500 nos headings (§2.2), que
+     é o que vale aqui.
+   - **Escala tipográfica.** Sem os `clamp` de headline da §2.3: eles são
+     feitos para hero. Fica a *lógica* deles — quanto maior o título, mais
+     apertado o tracking (§2.3, "Padrão").
+   - **Movimento.** Sem GSAP/Lenis: a §6 inteira é da landing. Sobram os
+     tokens de easing e a mola do botão, que são de sistema, não de página.
+   - **Fustat na marca e nos títulos.** A voz da marca (wordmark + h1–h6) é a
+     Fustat em 700 — mesma "tinta" da Inter Display 600 que ela substitui
+     (medido: 0.56 × 0.58 de pixels pintados por área de x-height). Fica FORA:
+     do texto pequeno (corpo, rótulos, botões, campos), onde o traço mais leve
+     dela (400 = 0.43 × 0.45 da Inter) e o olho 3% menor tiram contraste; e dos
+     números das métricas, porque com algarismos tabulares ela dá ao ponto a
+     largura de um dígito ("21 . 562"). Números seguem na Inter Display.
+   - **Contorno é `outline`, não `border`** (§0.3) — não entra no box model.
+   - **Sombra azulada, spread negativo** (§0.4, §5.3 "Assinatura").
+
+   A escala de texto do sistema (§1.3, "Texto") é exatamente o slate do
+   Tailwind: #0f172a=slate-900, #334155=700, #475569=600, #64748b=500,
+   #94a3b8=400, #cbd5e1=300, #e2e8f0=200. O slate segue usado direto para
+   títulos, corpo e enfeite — MENOS para texto secundário e de erro: medido,
+   slate-400 dá 2,56:1 no branco e slate-500 cai para 4,40–4,48:1 no canvas e
+   no tonal-blue, abaixo do mínimo de 4,5:1 para texto. Esses papéis ganharam
+   tokens próprios em `@theme` (`muted`, `muted-on-tint`, `danger-text`); o
+   slate-400 fica só para placeholder e enfeite que não é texto.
+   ========================================================================== */
+
+@theme {
+  /* §1.1 — escala de marca. Não existe brand-800. */
+  --color-brand-50: #f0f5ff;
+  --color-brand-100: #e0ebff;
+  --color-brand-200: #bae0ff;
+  --color-brand-300: #7cc2ff;
+  --color-brand-400: #369eff;
+  --color-brand-500: #0052ff;
+  --color-brand-600: #003ecc;
+  --color-brand-700: #002eb3;
+  --color-brand-900: #001a80;
+
+  /* §1.3 — superfícies claras. As que o Tailwind não tem. */
+  /* Painel em blocos (remodelação de 10/2026): fundo cinza neutro, cartões
+     brancos sem contorno e sub-cartões tonais dentro deles. O azul
+     fica para a marca e o estado vivo; o cinza é o chão. */
+  --color-canvas: #f3f4f6; /* fundo da página e da sidebar */
+  --color-surface: #ffffff; /* cartão */
+  --color-tonal: #f6f7f9; /* sub-cartão / superfície tonal dentro do cartão */
+  --color-line: #e7e9ee; /* divisória */
+  --color-tonal-blue: #f2f6ff; /* campo de formulário / bolha de mensagem */
+  --color-ink: #07111f; /* --landing-ink */
+
+  /* §1.4 — semânticas. */
+  --color-ok: #10b981;
+  --color-danger: #ff6b6b;
+
+  /* Texto por papel (ver o cabeçalho). Viram `text-muted`, `text-muted-on-tint`
+     e `text-danger-text`. Contraste medido (WCAG 2):
+     - muted (slate-500): dica e texto secundário SOBRE BRANCO — 4,76:1.
+     - muted-on-tint (slate-600): o mesmo papel sobre canvas, tonal e
+       tonal-blue — 7,0–7,2:1 (o slate-500 ali fica em 4,40–4,48).
+     - danger-text (red-700): texto de erro, inclusive sobre o fundo de erro
+       translúcido (5,97:1). O #ff6b6b segue sendo o tom de anel/ponto, e o
+       #dc2626 dava só 4,45:1 sobre o fundo de erro. */
+  /* Aviso (atenção, não erro): texto âmbar-900 sobre véu âmbar 12% — o
+     texto escuro sobre fundo claro passa folgado de 4,5:1. */
+  --color-warn-text: #78350f;
+  --color-warn-bg: rgba(245, 158, 11, 0.12);
+  --color-muted: #64748b;
+  --color-muted-on-tint: #475569;
+  --color-danger-text: #b91c1c;
+  /* Texto secundário SOBRE o azul da sidebar (rótulo de grupo, meta da
+     conta). No ponto mais claro do gradiente (#0052ff) dá 4,6:1; o branco
+     puro dá 5,75:1. Branco translúcido cairia abaixo de 4,5. */
+  --color-on-brand-muted: #dde7ff;
+
+  /* Cores de campo e de erro (auditoria de UI, 10/2026). Antes eram
+     literais repetidos (`#eef0f4`, `#e8ebf0`) e o véu de erro aparecia em três
+     opacidades (0.08, 0.1, 0.12) que liam como três estados diferentes.
+     - field: fundo do campo e do chip em repouso; field-hover: no hover.
+     - danger-bg: véu de erro único. danger-text sobre ele, no branco: 5,97:1.
+     - placeholder: o texto de exemplo dentro do campo. Aqui ele NÃO é enfeite,
+       é o texto que vai ser enviado se o campo ficar vazio, então precisa
+       ser lido: 5,02:1 sobre o campo, 5,73:1 no branco. Segue distinguível
+       do valor digitado (slate-900, 15,6:1) pela claridade. */
+  --color-field: #eef0f4;
+  --color-field-hover: #e8ebf0;
+  --color-danger-bg: rgba(255, 107, 107, 0.1);
+  --color-placeholder: #5b677a;
+
+  /* Escala tipográfica do painel, por papel (auditoria de UI, 10/2026).
+     Antes eram 25 tamanhos soltos, 9 deles entre 11 e 14px, e o rótulo do
+     campo ficava a 0,5px da dica. Cada token já traz a entrelinha do papel:
+     títulos apertados, texto corrido a 1.5. Viram `text-caption`,
+     `text-body-sm`, `text-title-card` etc. Peso não entra no token: rótulo e
+     título de opcional usam 500; títulos (h1–h6) seguem na Fustat 700.
+     A prévia do celular no formulário de automação fica fora de propósito:
+     é cenário em miniatura, não texto do painel. */
+  --text-caption: 0.75rem; /* 12px: dica, meta, selo, legenda de gráfico */
+  --text-caption--line-height: 1.45;
+  --text-body-sm: 0.8125rem; /* 13px: texto de cartão, lista, rótulo */
+  --text-body-sm--line-height: 1.5;
+  --text-body: 0.875rem; /* 14px: campo e botão (≥ sm), texto principal */
+  --text-body--line-height: 1.5;
+  --text-title-card: 1rem; /* 16px: título de cartão e de etapa */
+  --text-title-card--line-height: 1.3;
+  --text-title-dialog: 1.25rem; /* 20px: título de janela */
+  --text-title-dialog--line-height: 1.25;
+  --text-title-page: 1.5rem; /* 24px: título das telas de auth */
+  --text-title-page--line-height: 1.2;
+  --text-stat-sm: 1.375rem; /* 22px: número em sub-cartão */
+  --text-stat-sm--line-height: 1;
+  --text-stat: 2rem; /* 32px: número de KPI */
+  --text-stat--line-height: 1;
+  --text-stat-xl: 3rem; /* 48px: número do card de destaque */
+  --text-stat-xl--line-height: 1;
+
+  /* §2.1 — famílias. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-inter-display), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-heading:
+    var(--font-fustat), var(--font-inter-display), ui-sans-serif, sans-serif;
+
+  /* §4 — recorte da escala de raios, nomeado pelo papel em vez do valor:
+     no painel só existem quatro tamanhos de caixa. */
+  --radius-panel: 1.75rem; /* card de destaque */
+  --radius-card: 1.25rem; /* bloco do painel */
+  --radius-field: 0.85rem; /* .pm-btn — campos casam com o botão */
+  --radius-chip: 0.7rem; /* .artifact__rule */
+
+  /* §5 — elevação. Offset-Y alto + blur alto + spread negativo. */
+  /* Sem contorno: o bloco se separa do chão pelo branco sobre o cinza e por
+     uma sombra neutra curta. */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.1);
+  --shadow-lift:
+    0 30px 60px -34px rgba(7, 17, 31, 0.34), 0 1px 2px rgba(7, 17, 31, 0.03);
+  --shadow-brand: 0 35px 90px -55px rgba(0, 82, 255, 0.45);
+  --shadow-nav: 0 12px 40px rgba(15, 23, 42, 0.1);
+}
+
+:root {
+  /* §6.1 — tokens de easing. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* §6.2 — a mola do botão, herdada do componente original:
+     stiffness 500, damping 60, mass 1 → ζ ≈ 1.34, SUPERAMORTECIDA.
+     Forma fechada: p(t) = 1 − 1.25·e^(−10t) + 0.25·e^(−50t), que assenta
+     (restDelta 0.01) em 1.174s e nunca ultrapassa o alvo. Amostrada aqui como
+     `linear()` — reproduz a curva real sem JS, coisa que nenhum cubic-bezier
+     faz. ~35% da duração carrega o grosso do movimento; o resto é
+     assentamento. */
+  --ease-spring: linear(
+    0,
+    0.098 2.1%,
+    0.262 4.3%,
+    0.415 6.4%,
+    0.542 8.5%,
+    0.642 10.7%,
+    0.721 12.8%,
+    0.783 14.9%,
+    0.831 17%,
+    0.897 21.3%,
+    0.938 25.6%,
+    0.962 29.8%,
+    0.977 34.1%,
+    0.992 42.6%,
+    0.997 51.1%,
+    0.999 59.6%,
+    1
+  );
+  --duration-spring: 1.174s;
+}
+
+/* Navegadores sem `linear()` caem no ease-out mais próximo em caráter. */
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-spring: 0.55s;
+  }
+}
+
+@layer base {
+  body {
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    @apply bg-canvas text-slate-600;
+  }
+
+  /* §2.2 — headings na fonte da marca (Fustat 700, ver o cabeçalho). O
+     tracking negativo é o do sistema; a §2.3 o aperta mais conforme o título
+     cresce, e as poucas telas com título grande fazem isso na própria classe. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    @apply text-slate-900;
+  }
+
+  /* §10 — foco de teclado visível em tudo que recebe foco. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+/* ==========================================================================
+   Componentes.
+
+   Vivem em `@layer components` de propósito: no Tailwind v4 a camada
+   `utilities` vem depois de `components`, e CSS fora de camada nenhuma ganha
+   das duas. Sem isso um `text-slate-400` ao lado de `.eyebrow`, ou o vermelho
+   de falha ao lado de `.stat-value`, seria silenciosamente ignorado — a classe
+   do sistema venceria o utilitário. Dentro da camada o utilitário ajusta o
+   caso particular e o componente segue dono do padrão.
+   ========================================================================== */
+@layer components {
+  /* =========================================================================
+     .pm-btn — botão padrão do sistema (§7.1)
+     -------------------------------------------------------------------------
+     Pílula > [quadrado de ícone] + [rótulo]. As duas janelas (`.pm-btn__icon`
+     e `.text-roll`) empilham duas cópias na MESMA célula de grid e deslocam
+     por `transform`: sem FLIP, sem medição, sem JS, sem layout por frame.
+
+     Só a variante `--primary` está aqui. A `--light` (sobre fundo escuro)
+     existe no sistema mas o painel não tem superfície escura — quando tiver, o
+     corpo dela está na §7.1 do documento.
+     ========================================================================= */
+  .pm-btn {
+    --pm-btn-square: 2.25rem;
+    --pm-btn-gap: 0.7rem;
+    --pm-btn-pad: 0.25rem;
+    --pm-btn-pad-end: 0.95rem;
+    --pm-btn-icon: 1.05rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pm-btn-gap);
+    padding: var(--pm-btn-pad) var(--pm-btn-pad-end) var(--pm-btn-pad)
+      var(--pm-btn-pad);
+    border-radius: 0.85rem;
+    font-size: var(--text-body-sm);
+    letter-spacing: -0.005em;
+    text-decoration: none;
+    overflow: hidden;
+  }
+  .pm-btn--block {
+    width: 100%;
+    justify-content: center;
+  }
+  .pm-btn--compact {
+    --pm-btn-square: 1.75rem;
+    --pm-btn-gap: 0.5rem;
+    --pm-btn-pad-end: 0.75rem;
+    --pm-btn-icon: 0.85rem;
+    border-radius: 0.7rem;
+    font-size: var(--text-caption);
+  }
+  .pm-btn:disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* Janela da seta: o conteúdo empilhado é recortado pelo quadrado. */
+  .pm-btn__icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: var(--pm-btn-square);
+    height: var(--pm-btn-square);
+    border-radius: calc(var(--pm-btn-square) * 0.22);
+    overflow: hidden;
+  }
+  .pm-btn__icon svg {
+    grid-area: 1 / 1;
+    width: var(--pm-btn-icon);
+    height: var(--pm-btn-icon);
+    transition: transform var(--duration-spring) var(--ease-spring);
+  }
+  .pm-btn__icon svg:first-child {
+    transform: translateX(0);
+  }
+  .pm-btn__icon svg:last-child {
+    transform: translateX(-230%);
+  }
+
+  /* Hover da seta: a visível sai pela direita, a de trás entra pela esquerda. */
+  .pm-btn:hover .pm-btn__icon svg:first-child,
+  .pm-btn:focus-visible .pm-btn__icon svg:first-child {
+    transform: translateX(230%);
+  }
+  .pm-btn:hover .pm-btn__icon svg:last-child,
+  .pm-btn:focus-visible .pm-btn__icon svg:last-child {
+    transform: translateX(0);
+  }
+  .pm-btn:focus-visible {
+    outline: 2px solid #0052ff;
+    outline-offset: 3px;
+  }
+
+  /* Sem sombra e sem troca de cor no hover: o deslizamento da seta e do rótulo
+     é a única resposta do botão (§6.10). */
+  .pm-btn--primary {
+    color: #fff;
+    background: #0052ff;
+  }
+  .pm-btn--primary .pm-btn__icon {
+    color: #0052ff;
+    background: #fff;
+  }
+  /* Inversa da primária, para cima do card de destaque azul. */
+  .pm-btn--light {
+    color: #0f172a;
+    background: #fff;
+  }
+  .pm-btn--light .pm-btn__icon {
+    color: #fff;
+    background: #0052ff;
+  }
+  .pm-btn--light:focus-visible {
+    outline-color: #fff;
+  }
+
+  /* =========================================================================
+     .text-roll — rolamento de texto (§7.2)
+     -------------------------------------------------------------------------
+     Duas cópias do mesmo texto empilhadas na mesma célula de grid, recortadas
+     por `overflow: hidden`. No hover do `.text-roll-host` a de cima sai pelo
+     topo e a de baixo sobe para o lugar dela. Mesma mola do botão.
+
+     `padding-bottom` + `margin-bottom` negativo estendem a área de recorte sem
+     alterar a altura da caixa — sem isso o `overflow` corta a perna do g/q
+     (§11.4).
+     ========================================================================= */
+  .text-roll {
+    display: grid;
+    overflow: hidden;
+    padding-bottom: 0.28em;
+    margin-bottom: -0.28em;
+    line-height: 1.25;
+  }
+  .text-roll__line {
+    grid-area: 1 / 1;
+    white-space: pre;
+    transition: transform var(--duration-spring) var(--ease-spring);
+  }
+  .text-roll__line:first-child {
+    transform: translateY(0);
+  }
+  .text-roll__line:last-child {
+    transform: translateY(125%);
+  }
+  .text-roll-host:hover .text-roll__line:first-child,
+  .text-roll-host:focus-visible .text-roll__line:first-child {
+    transform: translateY(-125%);
+  }
+  .text-roll-host:hover .text-roll__line:last-child,
+  .text-roll-host:focus-visible .text-roll__line:last-child {
+    transform: translateY(0);
+  }
+
+  /* =========================================================================
+     .btn-quiet — ação secundária
+     -------------------------------------------------------------------------
+     O sistema só documenta o CTA (`.pm-btn`), porque numa landing só existe
+     uma ação por seção. Um painel tem Cancelar, Editar, Excluir, Reconectar —
+     ações que não podem competir com o CTA. Em vez de inventar uma terceira
+     variante de `.pm-btn`, essas ficam no registro mais baixo do sistema: sem
+     preenchimento, separação por tom (§0.2), mesmo raio e mesmo corpo do botão
+     padrão.
+     ========================================================================= */
+  .btn-quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.85rem;
+    font-size: var(--text-body-sm);
+    letter-spacing: -0.005em;
+    color: #475569;
+    transition: color 0.25s, background-color 0.25s;
+  }
+  .btn-quiet:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  /* Texto no vermelho de texto de erro: o #dc2626 dava ~4,4:1 sobre o fundo
+     de erro a 10%. */
+  .btn-quiet--danger:hover {
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+  }
+  .btn-quiet:disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* =========================================================================
+     .card — o bloco do painel
+     -------------------------------------------------------------------------
+     Cartão branco sem contorno, separado do chão cinza pela sombra curta.
+     Padding de 20px no celular e 24px a partir de `sm`. Antes a mesma lista
+     de utilitários vinha escrita à mão em ~24 lugares. Um utilitário ao lado
+     (p-*, h-full, col-span) ajusta o caso particular: a classe mora em
+     `@layer components`, e os utilitários vêm depois.
+     ========================================================================= */
+  .card {
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    padding: 1.25rem;
+  }
+  @media (min-width: 40rem) {
+    .card {
+      padding: 1.5rem;
+    }
+  }
+
+  /* =========================================================================
+     .card-lift — cartão que levanta no hover (§6.10)
+     -------------------------------------------------------------------------
+     Só dentro de `@media (hover: hover)`: em toque, `:hover` gruda depois do
+     tap.
+
+     O deslocamento é a propriedade `translate`, não `transform`. Na LP isso é
+     obrigatório — o GSAP escreve `transform` a cada frame durante o leque
+     (§11.2) — e aqui não há GSAP nenhum; fica assim mesmo porque é o idioma do
+     sistema, e porque deixa `transform` livre para quem vier depois.
+     ========================================================================= */
+  @media (hover: hover) {
+    .card-lift {
+      transition: translate 0.62s var(--ease-out-expo),
+        box-shadow 0.62s var(--ease-out-expo);
+    }
+    .card-lift:hover {
+      translate: 0 -4px;
+      box-shadow: var(--shadow-lift);
+    }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: reduce) {
+    .card-lift {
+      transition: box-shadow 0.2s;
+    }
+    .card-lift:hover {
+      translate: none;
+    }
+  }
+
+  /* =========================================================================
+     Rótulos, números, links
+     ========================================================================= */
+
+  /* §2.5 — a escala mono/rótulo do sistema. Só para sobretítulo de seção
+     (rótulo curto): caixa-alta espaçada em rótulo longo de campo é o texto
+     mais difícil de ler da tela. Rótulo de campo é o `.field-label`. */
+  /* 12px e 500: a 0.68rem (10,9px) ficava abaixo do piso de leitura, e a
+     caixa-alta pede um pouco de espaço entre letras, não 0.14em. */
+  .eyebrow {
+    font-size: var(--text-caption);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  /* Rótulo de campo de formulário: caixa normal, 13px, peso 500, slate-800.
+     A escala de 0.48–0.68rem em caixa-alta (§2.5) é da landing; num
+     formulário de trabalho o rótulo precisa ser lido, não só reconhecido. E
+     precisa pesar mais que a dica (12px, 400, slate-500): antes os dois
+     diferiam em 0,5px e só a cor os separava. */
+  .field-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+    line-height: 1.35;
+    color: #1e293b;
+  }
+
+  /* =========================================================================
+     .field — campo de formulário (input, select, textarea)
+     -------------------------------------------------------------------------
+     Um só estilo para o painel e as telas de auth. Sem contorno em repouso:
+     o campo é um bloco preenchido de cinza sobre o cartão branco, como os
+     sub-cartões do painel. Dentro de uma superfície tonal ele vira branco
+     (`.field--on-tint`), para não sumir no fundo igual.
+
+     Foco: o fundo clareia e entra o anel da primária. É o único traço que o
+     campo tem, e só enquanto está em uso: sem ele, quem navega por teclado
+     não sabe onde está. Inválido: véu vermelho, e o recado em texto fica
+     logo abaixo (ver o `Field` de cada formulário). 16px no celular: abaixo
+     disso o Safari do iPhone dá zoom na página ao focar.
+     ========================================================================= */
+  .field {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-field);
+    background: var(--color-field);
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    color: #0f172a;
+    outline: none;
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s;
+  }
+  @media (min-width: 40rem) {
+    .field {
+      font-size: var(--text-body);
+    }
+  }
+  .field::placeholder {
+    color: var(--color-placeholder);
+  }
+  .field:hover {
+    background: var(--color-field-hover);
+  }
+  .field--on-tint,
+  .field--on-tint:hover {
+    background: var(--color-surface);
+  }
+  .field:focus,
+  .field:focus-visible {
+    background: var(--color-surface);
+    outline: none;
+    box-shadow: 0 0 0 2px #0052ff, 0 0 0 6px rgba(0, 82, 255, 0.12);
+  }
+  .field[aria-invalid="true"] {
+    background: var(--color-danger-bg);
+  }
+  .field:disabled {
+    opacity: 0.55;
+  }
+
+  /* Diálogo modal (`<dialog>` nativo + `showModal()`, ver
+     components/Dialog.tsx). O próprio elemento é transparente e ocupa a
+     tela para rolar o conteúdo alto; o cartão fica dentro. O véu é o
+     `::backdrop`, na tinta do sistema (§1.2), não preto — preto puro sobre um
+     painel claro lê como falha de renderização. `overscroll-behavior` impede
+     que a rolagem do diálogo vaze para a página atrás. */
+  dialog.panel-dialog {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 1rem;
+    border: 0;
+    background: transparent;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  dialog.panel-dialog::backdrop {
+    background: rgba(7, 17, 31, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  /* A página atrás não rola enquanto há um modal aberto. */
+  html:has(dialog.panel-dialog[open]) {
+    overflow: hidden;
+  }
+
+  /* Números de dado. Tabulares para a coluna não dançar entre atualizações. */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* §2.3 — o numeral grande é o lugar onde a display sobrevive fora dos
+     títulos, como no preço da LP. Tracking aperta junto com o tamanho. A cor é
+     o padrão, não uma trava: `text-*` ao lado dela vence, que é como o
+     vermelho de falha entra. */
+  .stat-value {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: #0f172a;
+  }
+
+  /* Wordmark — o "MEIagente." da marca em texto: Fustat 700 e o
+     quadrado da primária no lugar do ponto final, na altura da linha de base.
+     O quadrado é em `em` para acompanhar qualquer tamanho. */
+  .wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+  .wordmark__dot {
+    width: 0.2em;
+    height: 0.2em;
+    margin-left: 0.07em;
+    background: #0052ff;
+  }
+
+  /* §6.10 — sublinhado que cresce a partir do zero, e a cor vira a primária. */
+  .text-link {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.5s var(--ease-out-expo), color 0.25s;
+  }
+  .text-link:hover {
+    background-size: 100% 1px;
+    color: #0052ff;
+  }
+
+  /* =========================================================================
+     Casca do painel: sidebar azul, cabeçalho de página, cartão azul
+     -------------------------------------------------------------------------
+     Sem contorno em nada: a sidebar se separa pelo azul, o item ativo por um
+     véu branco, o cartão azul pela cor. O único traço é o foco de teclado,
+     que é estado e não enfeite.
+     ========================================================================= */
+
+  /* O gradiente desce do azul da marca para um mais fundo: o texto branco
+     tem o pior contraste lá em cima (5,75:1), nunca abaixo disso. */
+  .sidebar-brand {
+    background: linear-gradient(180deg, #0052ff 0%, #0047e6 45%, #0036c2 100%);
+    color: #fff;
+  }
+  /* O anel azul do foco sumiria no azul. */
+  .sidebar-brand :focus-visible {
+    outline-color: #fff;
+  }
+
+  /* A marca em branco, para cima do azul. */
+  .wordmark--on-brand {
+    color: #fff;
+  }
+  .wordmark--on-brand .wordmark__dot {
+    background: #fff;
+  }
+
+  /* Sobretítulo do cabeçalho de página ("MEIAGENTE · INÍCIO"), com o traço da
+     referência antes. Azul da marca sobre o canvas: 5,2:1. */
+  .page-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #0052ff;
+  }
+  .page-eyebrow::before {
+    content: "";
+    width: 1.5rem;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+  }
+
+  /* Título grande da página. A §2.3 aperta o tracking conforme o título
+     cresce; 3rem só a partir de telas largas, 2rem no celular. */
+  .page-title {
+    font-size: clamp(2rem, 1.5rem + 1.6vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+  }
+
+  /* Cartão destaque azul (o "Seguidores" da referência). Mesmo raio e
+     sombra dos cartões de destaque que já existem no painel. */
+  .card-brand {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: linear-gradient(160deg, #0052ff 0%, #0040d9 100%);
+    box-shadow: var(--shadow-brand);
+    color: #fff;
+    padding: 1.25rem;
+  }
+  @media (min-width: 40rem) {
+    .card-brand {
+      padding: 1.5rem;
+    }
+  }
+  .card-brand h2,
+  .card-brand h3 {
+    color: #fff;
+  }
+
+  /* =========================================================================
+     Bolha de mensagem — rascunho de WhatsApp e conversa com o agente
+     -------------------------------------------------------------------------
+     Separação tonal, não por borda (§0.2): a bolha é a superfície azulada do
+     sistema sobre branco. O canto vivo embaixo à esquerda é o que faz ler como
+     mensagem recebida.
+     ========================================================================= */
+  .dm-bubble {
+    background: #f2f6ff;
+    border-radius: 1rem 1rem 1rem 0.25rem;
+  }
+
+  /* Foco de teclado SEM outline (regra do dono, Fase 2 em diante): anel
+     azul por box-shadow, o mesmo do campo em foco. Para os elementos novos;
+     a regra global de :focus-visible (outline) segue nos antigos até a
+     decisão pendente do HANDOFF. */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #0052ff, 0 0 0 6px rgba(0, 82, 255, 0.12);
+  }
+  .focus-ring-within:has(:focus-visible) {
+    box-shadow: 0 0 0 2px #0052ff, 0 0 0 6px rgba(0, 82, 255, 0.12);
+  }
+  .focus-ring-within :focus-visible {
+    outline: none;
+  }
+
+  /* §5.4 — o ponto de status carrega o halo como anel de sombra. */
+  .live-dot {
+    box-shadow: 0 0 0 0.22rem rgba(16, 185, 129, 0.09);
+    animation: soft-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+::selection {
+  background: rgba(0, 82, 255, 0.14);
+}
+
+/* ==========================================================================
+   §6.11 — prefers-reduced-motion
+
+   Fora de camada de propósito: precisa vencer os componentes acima, inclusive
+   quando um utilitário já mexeu no caso particular.
+
+   O botão perde o deslizamento da seta e do rótulo; a cópia de baixo é
+   escondida para não vazar no recorte. Como ele não troca de cor no hover, sem
+   o contorno ficaria sem resposta nenhuma — contorno é estado, não movimento.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+  .pm-btn__icon svg,
+  .text-roll__line {
+    transition: none;
+  }
+  .pm-btn:hover .pm-btn__icon svg:first-child,
+  .pm-btn:focus-visible .pm-btn__icon svg:first-child,
+  .text-roll-host:hover .text-roll__line:first-child,
+  .text-roll-host:focus-visible .text-roll__line:first-child {
+    transform: none;
+  }
+  .pm-btn__icon svg:last-child,
+  .text-roll__line:last-child {
+    opacity: 0;
+  }
+  .pm-btn:hover {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+  .text-link {
+    transition: none;
+  }
+}
