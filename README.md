@@ -32,14 +32,19 @@ No Brasil, muitos MEIs acumulam funções: executam o serviço, atendem clientes
 
 É especialmente crítico para prestadores de serviço que trabalham sozinhos: **eletricistas, técnicos de manutenção, fotógrafos e autônomos em geral**. O dia a dia costuma rodar em ferramentas desconectadas: WhatsApp, Instagram, planilhas e documentos soltos.
 
-**O que dizem as pesquisas do Sebrae (citadas na proposta):**
+**O que dizem as pesquisas do Sebrae (recorte MEI):**
 
-| Indicador (2026) | Valor |
-|---|---|
-| MEIs que já usam IA regularmente em marketing e comunicação | 29% |
-| MEIs que já fizeram testes com IA | 23% |
-| MEIs que pretendem adotar IA | 28% |
-| MEIs que apontam como obstáculo a dificuldade de saber **como aplicar** IA | 23% |
+| Indicador | Valor | Fonte |
+|---|---|---|
+| MEIs que usam IA regularmente em marketing e comunicação | 29% | [1] |
+| MEIs que já fizeram testes com IA | 23% | [1] |
+| MEIs que não usam, mas pretendem usar em breve | 28% | [1] |
+| MEIs que apontam como principal obstáculo **não saber como aplicar** IA no negócio | 23% | [2] |
+
+- [1] Sebrae, *Pulso dos Pequenos Negócios*, 13ª edição (nov/2026): https://agenciasebrae.com.br/?p=43963
+- [2] Sebrae, FGV IBRE e Google, coleta em set/2025, cerca de 5.000 empresas (jan/2026): https://agenciasebrae.com.br/dados/pequenos-negocios-abracam-a-inteligencia-artificial-para-otimizar-o-tempo-e-inovar/
+
+Em Pernambuco, 25% dos empreendedores usam IA regularmente em marketing e comunicação e 32% planejam usar em breve (Pulso, 13ª edição): https://www.diariodepernambuco.com.br/economia/2026/10/11726740-pesquisa-do-sebrae-indica-que-25-dos-empreendedores-pernambucanos-usam-ia-nos-negocios.html
 
 **Oportunidade:** tornar a IA útil para quem não tem conhecimento técnico, integrando-a diretamente às tarefas do cotidiano.
 
@@ -267,6 +272,27 @@ Foco no **ciclo completo de atendimento**, usando **dados cadastrados e de demon
 - **Documentos jurídicos:** minutas geradas por IA são **ponto de partida**, devem ser **revisadas** e não substituem orientação jurídica.
 - **Controle de custo e abuso:** limites de uso e monitoramento do custo de inferência.
 - **Rastreabilidade:** registrar quais ações o agente propôs e quais o usuário aprovou.
+
+### Como isso está implementado
+
+| O que protege | Como funciona | Onde está |
+|---|---|---|
+| Nada sai sem o MEI aprovar | Orçamento, contrato e mensagem nascem como `rascunho` e só viram `aprovado` ou `descartado` por decisão do usuário no cartão. Decisão repetida não muda nada. No MVP não há envio automático: a mensagem é copiada e colada. | `supabase/04-documentos.sql` (`item_decidir`), `src/app/painel/agente/Cartao.tsx` |
+| Documento aprovado não é refeito | O banco recusa regerar orçamento ou contrato já aprovado. | `supabase/04-documentos.sql` |
+| Entrada do modelo validada | Cada uma das 16 ferramentas tem esquema `zod`; entrada inválida não executa e volta ao modelo como `entrada_invalida`. | `src/lib/agente/ferramentas/executar.ts` |
+| Regras de negócio no banco | A IA interpreta; as funções SQL garantem estados do serviço e evitam cliente duplicado. | `supabase/02..05-*.sql` |
+| Teto de etapas por pedido | No máximo 8 voltas do modelo por mensagem do usuário. | `src/lib/agente/loop.ts` (`MAX_VOLTAS`) |
+| Teto de custo por dia | Limite diário de tokens por MEI (padrão 400 mil, `AGENTE_LIMITE_DIARIO_TOKENS`). | `src/lib/agente/uso.ts` |
+| Histórico consistente | Volta que falha no meio (filtro, corte, erro de rede) não é gravada; a conversa segue utilizável. | `src/lib/agente/loop.ts` |
+| Histórico limitado | No máximo 40 mensagens ou 40 mil caracteres enviados ao modelo. | `src/lib/agente/llm.ts` (`limitarHistorico`) |
+| Auditoria | Toda chamada de ferramenta e toda decisão do usuário ficam em `agente_acoes` (entrada, saída, erro, autor), com RLS. | `supabase/06-agente.sql` |
+| Erros compreensíveis | Toda falha (limite de taxa, conversa longa, filtro, limite do dia) chega ao MEI como mensagem em português, com o que fazer em seguida. | `src/lib/agente/llm.ts`, `src/lib/agente/loop.ts` |
+
+### Como medimos a qualidade
+
+- **Testes automáticos:** 308 testes (`npm test`) com um LLM falso, que segue um roteiro, e banco PGlite em memória. Cobrem o laço do agente, as ferramentas, as regras SQL, os documentos e a rota do chat, sem gastar crédito.
+- **Aceitação com o modelo real:** `scripts/agente-smoke.ts` roda o cenário da seção 3 contra o modelo. Esperado: 3 cartões, serviço `confirmado` e nenhuma `entrada_invalida`.
+- **Métricas de produto:** as da seção 11, medidas na fase de validação com MEIs reais.
 
 ---
 
