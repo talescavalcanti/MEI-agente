@@ -14,8 +14,20 @@ export default function SetupForm({ temUsuarios = false }: { temUsuarios?: boole
 
   return (
     <form action={action} className="space-y-5">
-      <AuthField label="Seu nome" name="name" autoComplete="name" autoFocus />
-      <AuthField label="Email" name="email" type="email" autoComplete="username" />
+      <AuthField
+        label="Seu nome"
+        name="name"
+        autoComplete="name"
+        defaultValue={state?.name}
+        autoFocus
+      />
+      <AuthField
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="username"
+        defaultValue={state?.email}
+      />
       <AuthField
         label="Senha"
         name="password"

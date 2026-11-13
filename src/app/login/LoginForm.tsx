@@ -16,12 +16,20 @@ export default function LoginForm() {
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="de" value={de} />
-      <AuthField label="Email" name="email" type="email" autoComplete="username" autoFocus />
+      <AuthField
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="username"
+        defaultValue={state?.email}
+        autoFocus={!state?.email}
+      />
       <AuthField
         label="Senha"
         name="password"
         type="password"
         autoComplete="current-password"
+        autoFocus={Boolean(state?.email)}
       />
 
       {state?.error && <AuthError>{state.error}</AuthError>}
