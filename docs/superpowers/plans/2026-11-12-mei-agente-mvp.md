@@ -350,9 +350,10 @@ Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administ
 - Consumes: `requireUserApi`, `rodarTurno`, `criarLlm`, `montarSystem`, `blocoContexto`, `db`.
 - Produces: `POST /api/chat` com corpo `{ conversaId: string | null, texto: string }` → `200 application/x-ndjson`, uma linha por `Evento`. `401` sem sessão; `400` texto vazio ou > 4000 caracteres; `409` usuário sem MEI. `runtime = "nodejs"`, `maxDuration = 120`, cabeçalhos `PRIVATE_HEADERS`. `prepararTurno(userId): Promise<{ deps, mei }>` em `servidor.ts` (reusado pelo cron do Task 15).
 
-- [ ] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
-- [ ] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
-- [ ] **Step 3:** Commit `feat: rota de chat com streaming`.
+- [x] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
+- [x] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
+- [x] **Step 3:** Commit `feat: rota de chat com streaming`.
+- **Feito:** `prepararTurno(userId)` devolve `null` quando o usuário não tem MEI (a rota responde 409). Para o agendador (T15), que só tem o `mei_id`, `servidor.ts` também exporta `depsDoMei(meiId, { rpc?, agora? })`; `textoComContexto(deps, mei, texto)` prefixa o `blocoContexto` com as memórias. O turno roda dentro de `after()` para terminar de gravar mesmo se a aba fechar. Falha ao preparar o turno (banco fora) responde 500 antes do stream. Testes em `tests/agente/chat-rota.test.ts` (rota real com PGlite e LLM falso).
 
 ### Task 12: Primeiro acesso e "Meu negócio"
 
@@ -393,10 +394,11 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 **Interfaces:**
 - Consumes: `cliente_buscar`, `servico_listar`, `agenda_listar`, `item_ver`, `renderOrcamento`; novas funções de leitura em `04-documentos.sql`: `documentos_listar(p_mei)`, `mensagens_listar(p_mei, p_status text default null)`.
 
-- [ ] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
-- [ ] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
+- [x] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
+- [x] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
 - [ ] **Step 3:** `npm run build` e conferência visual das cinco telas com o seed.
-- [ ] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- [x] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- **Feito (PR #17):** cinco telas, página de impressão e `07-consultas.sql` com testes. Mensagens ainda é lista simples: trocar pelo `Cartao` junto com a parte B da Task 13. Step 3 (conferência visual com o seed) pendente.
 
 ### Task 15: Proatividade (agendador e Início)
 
@@ -417,13 +419,15 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 **Files:**
 - Create: `supabase/seed/demo.sql`, `scripts/smoke.sh`; Modify: `README.md` (§14 "Como rodar", status), `.env.example`
 
-- [ ] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
-- [ ] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
-- [ ] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
+- [x] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
+- [x] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
+- [x] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
 - [ ] **Step 4:** Ensaiar o roteiro de demo: (1) fala do README → cartões → aprovar e copiar; (2) "Verificar agora" → lembrete do Carlos; (3) "me dá uma ideia de post para essa semana" → rascunho de post.
 - [ ] **Step 5:** Commit `docs: como rodar e dados de demonstracao`. Deploy na Vercel **só com o ok do dono**.
 
 ---
+- **Feito (PR #16):** seed (o #009 e a data de envio exigiram escrita direta no seed, documentada lá), `smoke.sh` pronto mas ainda sem rodar (faltam `/api/chat` e `/api/cron/pendencias`), README §14. Steps 4 e 5 (ensaio e deploy) pendentes.
+
 
 ## Provedor: Featherless
 
