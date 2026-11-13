@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { publicAppUrl } from "@/lib/env";
 import "./globals.css";
 
 /* As duas fontes do design system (LANDING-DESIGN-SYSTEM.md §2.1), self-hosted.
@@ -35,11 +34,8 @@ const description =
   "Agente de IA que prepara orçamento, minuta de contrato e mensagem para o cliente do MEI, sempre com a sua aprovação.";
 
 /* Ícones e imagem de prévia, quando existirem, são arquivos nesta pasta
-   (convenção do Next: favicon.ico, icon.png, opengraph-image.png). A prévia
-   precisa de URL absoluta: vem do APP_URL quando ele é público; senão
-   (local) o Next usa localhost. */
+   (convenção do Next: favicon.ico, icon.png, opengraph-image.png). */
 export const metadata: Metadata = {
-  metadataBase: publicAppUrl ? new URL(publicAppUrl) : null,
   title,
   description,
   openGraph: {
