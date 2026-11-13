@@ -42,7 +42,7 @@ function dropClientCache() {
 function safeNext(raw: string | null): string {
   if (!raw) return "/painel";
   if (!raw.startsWith("/") || raw.startsWith("//")) return "/painel";
-  if (raw.startsWith("/login") || raw.startsWith("/setup")) return "/painel";
+  if (raw.startsWith("/login") || raw.startsWith("/setup") || raw.startsWith("/cadastro")) return "/painel";
   return raw;
 }
 
@@ -93,17 +93,13 @@ export async function logout() {
 }
 
 /**
- * Cria o primeiro admin. Só funciona com a tabela vazia.
- *
- * A contagem é refeita aqui, e não só na página: a página é a porta que o
- * usuário vê, esta ação é a porta que vale. Sem a recontagem, alguém poderia
- * chamar a Server Action direto e criar um segundo admin depois que o primeiro
- * já existe — Server Action é endpoint público, do ponto de vista de quem ataca.
+ * Cria uma conta de usuário. Se a tabela `users` estiver vazia, o primeiro
+ * usuário nasce `admin`; os seguintes nascem `user`. Depois de criar a conta,
+ * inicia a sessão e manda cadastrar o negócio em `/painel/negocio`.
  */
-export async function setupFirstAdmin(_prev: AuthState, formData: FormData): Promise<AuthState> {
+export async function criarConta(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const probe = await probeUsers();
   if (!probe.ok) return { error: `Banco indisponível: ${probe.message}` };
-  if (!probe.empty) return { error: "O primeiro administrador já foi criado." };
 
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
@@ -115,21 +111,27 @@ export async function setupFirstAdmin(_prev: AuthState, formData: FormData): Pro
   const bad = validatePassword(password);
   if (bad) return { error: bad };
 
+  const role = probe.empty ? "admin" : "user";
+
   let created;
   try {
     created = await insertUser({
       email,
       name,
       password_hash: await hashPassword(password),
-      role: "admin",
+      role,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Não deu pra criar o administrador." };
+    return { error: e instanceof Error ? e.message : "Não deu pra criar a conta." };
   }
-  if (!created) return { error: "Não deu pra criar o administrador. Tente de novo." };
+  if (!created) return { error: "Não deu pra criar a conta. Tente de novo." };
 
-  await createSessionCookie({ sub: created.id, role: "admin", ver: 1 });
+  await createSessionCookie({ sub: created.id, role, ver: 1 });
   dropClientCache();
   // Conta criada, negócio ainda não: o próximo passo do primeiro acesso.
   redirect("/painel/negocio");
+}
+
+export async function setupFirstAdmin(prev: AuthState, formData: FormData): Promise<AuthState> {
+  return criarConta(prev, formData);
 }
