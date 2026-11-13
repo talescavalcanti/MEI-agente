@@ -12,7 +12,7 @@ import type { Rpc } from "@/lib/dominio/tipos";
 
 const SUPABASE = fileURLToPath(new URL("../../supabase", import.meta.url));
 
-/** Arquivos carregados: `supabase/01-*.sql` a `89-*.sql` (de 01 a 10 hoje), em ordem alfabética. O `90-cron.sql` fica de fora. */
+/** Arquivos carregados: `supabase/01-*.sql` a `89-*.sql` (de 01 a 11 hoje), em ordem alfabética. O `90-cron.sql` fica de fora. */
 const ARQUIVO_SQL = /^[0-8]\d-.*\.sql$/;
 
 /** Nome de função e de argumento aceito em `rpc`. */

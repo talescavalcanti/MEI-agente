@@ -5,12 +5,23 @@ import { renderMinuta } from "@/lib/documentos/contrato";
 import { valoresDivergentes } from "@/lib/documentos/divergencias";
 import { A_PREENCHER } from "@/lib/documentos/formato";
 import type { DadosDocumento } from "@/lib/documentos/tipos";
-import type { ConhecimentoAchado, Contrato, ItemVisto, Mensagem, Orcamento, Rpc } from "@/lib/dominio/tipos";
+import type {
+  Cliente,
+  ConhecimentoAchado,
+  Contrato,
+  ItemVisto,
+  Mensagem,
+  NotaFiscal,
+  NotaVista,
+  Orcamento,
+  Rpc,
+} from "@/lib/dominio/tipos";
+import { formatarDocumento } from "@/lib/fiscal/documento";
 import { instantSP } from "@/lib/tz";
 import { FERRAMENTAS } from "./definicoes";
 
 /** Item criado como rascunho: a tela mostra o cartão com aprovar/editar/descartar. */
-export type Cartao = { tipo: "orcamento" | "contrato" | "mensagem"; id: string };
+export type Cartao = { tipo: "orcamento" | "contrato" | "mensagem" | "nota"; id: string };
 
 export type ResultadoFerramenta = { conteudo: string; erro: boolean; cartao?: Cartao };
 
@@ -110,7 +121,11 @@ const EXECUTORES: Record<string, (ctx: Ctx, e: Entrada) => Promise<Saida>> = {
       p_dados: { ...e, canal: "whatsapp" },
     })) as Mensagem;
     let avisoValores: string[] = [];
-    if (msg.servico_id) {
+    if (e.nota_id) {
+      // Envio de nota: o valor citado é comparado com o da nota (pode ser parcial).
+      const visto = (await rpc("nota_ver", { p_mei: meiId, p_id: e.nota_id })) as NotaVista;
+      avisoValores = valoresDivergentes(msg.conteudo, visto.nota.valor);
+    } else if (msg.servico_id) {
       const visto = (await rpc("item_ver", { p_mei: meiId, p_tipo: "mensagem", p_id: msg.id })) as ItemVisto;
       const valor = visto.servico?.valor;
       if (valor != null) avisoValores = valoresDivergentes(msg.conteudo, valor);
@@ -159,6 +174,38 @@ const EXECUTORES: Record<string, (ctx: Ctx, e: Entrada) => Promise<Saida>> = {
         p_forma: e.forma,
       }),
     };
+  },
+
+  async preparar_nota_fiscal({ rpc, meiId }, e) {
+    const nota = (await rpc("nota_preparar", {
+      p_mei: meiId,
+      p_servico: e.servico_id,
+      p_valor_parcial: e.valor_parcial,
+    })) as NotaFiscal;
+    // Só o que o modelo precisa citar. Valor, tomador, códigos e competência
+    // ficam no cartão: o modelo nunca os reescreve.
+    return {
+      valor: {
+        id: nota.id,
+        status: nota.status,
+        parcial: nota.parcial,
+        avisos: nota.avisos.map(({ codigo, texto }) => ({ codigo, texto })),
+      },
+      cartao: { tipo: "nota", id: nota.id },
+    };
+  },
+
+  async salvar_documento_cliente({ rpc, meiId }, e) {
+    const c = (await rpc("cliente_documento_salvar", {
+      p_mei: meiId,
+      p_cliente: e.cliente_id,
+      p_documento: e.documento,
+    })) as Cliente;
+    return { valor: { id: c.id, nome: c.nome, documento: c.documento && formatarDocumento(c.documento) } };
+  },
+
+  async consultar_faturamento({ rpc, meiId }, e) {
+    return { valor: await rpc("faturamento_ano", { p_mei: meiId, p_ano: e.ano }) };
   },
 
   async salvar_memoria({ rpc, meiId }, e) {

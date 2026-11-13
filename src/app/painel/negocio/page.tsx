@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/dal";
 import { ATIVIDADES_SUGERIDAS, meiDoUsuario, rpcDb } from "@/lib/dominio/mei";
+import { sugerirCodigos } from "@/lib/fiscal/codigos";
+import { formatarDocumento } from "@/lib/fiscal/documento";
 import PageHeader from "../PageHeader";
-import NegocioForm from "./NegocioForm";
+import NegocioForm, { DadosFiscaisForm } from "./NegocioForm";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,6 +44,30 @@ export default async function NegocioPage() {
           }}
         />
       </section>
+
+      {mei && (
+        <section aria-labelledby="dados-fiscais" className="card max-w-2xl space-y-5">
+          <div>
+            <h2 id="dados-fiscais" className="text-title-card">
+              Dados fiscais
+            </h2>
+            <p className="mt-1 text-body-sm text-muted">
+              Usados para preparar a nota fiscal de serviço. Quem emite a nota é você, no Emissor Nacional.
+            </p>
+          </div>
+          <DadosFiscaisForm
+            sugestoes={sugerirCodigos(mei.atividade)}
+            inicial={{
+              cnpj: mei.cnpj ? formatarDocumento(mei.cnpj) : "",
+              inscricao_municipal: mei.inscricao_municipal ?? "",
+              municipio: mei.municipio ?? "",
+              codigo_tributacao: mei.codigo_tributacao ?? "",
+              nbs: mei.nbs ?? "",
+              descricao_padrao_nota: mei.descricao_padrao_nota ?? "",
+            }}
+          />
+        </section>
+      )}
     </div>
   );
 }

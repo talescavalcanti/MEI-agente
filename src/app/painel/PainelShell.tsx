@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { logout } from "../auth/actions";
 import {
   IconCalendar,
+  IconChart,
   IconChat,
   IconClose,
   IconDoc,
@@ -54,6 +55,7 @@ const NAV: NavGroup[] = [
     title: "Rascunhos",
     items: [
       { href: "/painel/documentos", label: "Documentos", icon: <IconDoc /> },
+      { href: "/painel/notas", label: "Notas", icon: <IconChart /> },
       { href: "/painel/mensagens", label: "Mensagens", icon: <IconChat /> },
     ],
   },
