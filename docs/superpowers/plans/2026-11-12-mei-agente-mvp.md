@@ -21,6 +21,7 @@
 - **Sem `APP_URL` (decidido em 13/11):** o app roda localmente e ainda não tem endereço público. `env.appUrl` e `publicAppUrl` saem do código e do `.env.example`; o campo `metadataBase` sai do layout. Volta no deploy (Task 16), se precisar.
 - **Modelo (decidido em 13/11):** `AGENTE_MODELO=google/gemma-4-31B-it` na Featherless (`tool_use` sim, contexto de **32k tokens**). Com 32k, o `llm.ts` precisa limitar o histórico reenviado às últimas N mensagens inteiras (nunca cortar entre chamada e resultado) e as descrições das ferramentas devem ser curtas.
 - **Funções de listagem das telas (Task 14)** ficam em `supabase/07-consultas.sql` (`cliente_listar`, `documentos_listar`, `mensagens_listar`), e não em `02`/`04`, para não conflitar com a Task 9, que mexe no `04-documentos.sql`.
+- **Tipos do agente (decidido em 13/11):** `Llm`, `Chamada`, `Motivo` e `Evento` ficam em `src/lib/agente/tipos.ts` (criado pela Task 9); `Cartao` e `ResultadoFerramenta` em `src/lib/agente/ferramentas/executar.ts`; `Ferramenta` e `FERRAMENTAS` em `ferramentas/definicoes.ts` (Task 8).
 - **Build:** `npm run build` exige as variáveis de ambiente (o `env.ts` valida na carga); para build local sem banco, usar um `.env.local` com valores fictícios, nunca commitado.
 - **SQL idempotente** (`create table if not exists`, `create or replace function`), RLS ligado e **sem políticas**, como no `meu-chat`.
 - **Valores e datas de documento nunca vêm do texto do modelo**: orçamento e minuta são renderizados por template a partir do banco.
@@ -277,9 +278,9 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 
 Regras do executor: validar `entrada` com o `esquema` da ferramenta (falha → `erro: true`, conteúdo `{"entrada_invalida": <mensagens do zod>}`); exceção com prefixo `regra:` → `erro: true` com a frase; qualquer outra exceção → `erro: true`, `"erro interno, tente de novo"` e `console.error`; ferramenta desconhecida → `erro: true`. `conteudo` é sempre JSON em string. `redigir_mensagem` acrescenta `aviso_valores` quando `valoresDivergentes` não é vazio.
 
-- [ ] **Step 1:** Testes (PGlite): cenário do README ponta a ponta só com `executarFerramenta` (criar cliente → registrar serviço fechado 800 → faltantes → completar → orçamento → minuta → mensagem) termina com 3 cartões e serviço `confirmado`; **Review Focus 3:** `gerar_orcamento` com `servico_id` aleatório → `erro: true`, texto contém "não encontrado", zero linhas em `orcamentos`; entrada sem campo obrigatório → `erro: true` com `entrada_invalida`; nome de ferramenta inexistente → `erro: true`; `FERRAMENTAS` não contém nenhuma com nome começando em `enviar`.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Commit `feat: ferramentas do agente`.
+- [x] **Step 1:** Testes (PGlite): cenário do README ponta a ponta só com `executarFerramenta` (criar cliente → registrar serviço fechado 800 → faltantes → completar → orçamento → minuta → mensagem) termina com 3 cartões e serviço `confirmado`; **Review Focus 3:** `gerar_orcamento` com `servico_id` aleatório → `erro: true`, texto contém "não encontrado", zero linhas em `orcamentos`; entrada sem campo obrigatório → `erro: true` com `entrada_invalida`; nome de ferramenta inexistente → `erro: true`; `FERRAMENTAS` não contém nenhuma com nome começando em `enviar`.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Commit `feat: ferramentas do agente`.
 
 ### Task 9: Laço do agente, conversas, auditoria e limite de uso
 
