@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
-import { setupFirstAdmin, type AuthState } from "../auth/actions";
+import { criarConta, type AuthState } from "../auth/actions";
 import { AuthError, AuthField } from "../components/AuthShell";
 import Button from "../components/Button";
 
-export default function SetupForm() {
+export default function SetupForm({ temUsuarios = false }: { temUsuarios?: boolean }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(
-    setupFirstAdmin,
+    criarConta,
     undefined,
   );
 
@@ -28,6 +29,15 @@ export default function SetupForm() {
       <Button type="submit" disabled={pending} block>
         {pending ? "Criando…" : "Criar conta e continuar"}
       </Button>
+
+      {temUsuarios && (
+        <p className="text-center text-body-sm text-muted">
+          Já tem conta?{" "}
+          <Link href="/login" className="text-link font-medium text-brand-600">
+            Entrar
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

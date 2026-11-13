@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { probeUsers } from "@/lib/auth/users";
 import AuthShell from "../components/AuthShell";
 import SetupForm from "./SetupForm";
@@ -6,18 +5,12 @@ import SetupForm from "./SetupForm";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export const metadata = { title: "Primeiro acesso · MEIagente" };
+export const metadata = { title: "Criar conta · MEIagente" };
 
 /**
- * Cria o primeiro administrador e some.
- *
- * A rota só existe enquanto a tabela `users` está vazia. Assim que houver um
- * usuário, responde 404: `notFound()` e não um redirect para o login, porque
- * redirecionar confirmaria que a rota existe. Para quem sonda o app depois de
- * instalado, /setup simplesmente não está lá.
- *
- * Qualquer resposta que não seja um "está vazia" confirmado NÃO mostra o
- * formulário. Falhar fechado é o ponto: o formulário cria um administrador.
+ * Cadastro de conta. Se a tabela `users` estiver vazia, o primeiro usuário
+ * vira `admin`; depois disso, novos cadastros nascem como `user`, cada um com
+ * o próprio MEI cadastrado no passo seguinte (`/painel/negocio`).
  */
 export default async function SetupPage() {
   const probe = await probeUsers();
@@ -53,14 +46,12 @@ export default async function SetupPage() {
     );
   }
 
-  if (!probe.empty) notFound();
-
   return (
     <AuthShell
-      title="Primeiro acesso"
+      title={probe.empty ? "Primeiro acesso" : "Criar conta"}
       subtitle="Crie a sua conta. No passo seguinte você cadastra o seu negócio."
     >
-      <SetupForm />
+      <SetupForm temUsuarios={!probe.empty} />
     </AuthShell>
   );
 }

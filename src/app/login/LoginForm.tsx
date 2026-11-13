@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login, type AuthState } from "../auth/actions";
@@ -28,6 +29,13 @@ export default function LoginForm() {
       <Button type="submit" disabled={pending} block>
         {pending ? "Entrando…" : "Entrar"}
       </Button>
+
+      <p className="text-center text-body-sm text-muted">
+        Ainda não tem conta?{" "}
+        <Link href="/cadastro" className="text-link font-medium text-brand-600">
+          Criar conta
+        </Link>
+      </p>
     </form>
   );
 }
