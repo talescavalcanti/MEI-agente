@@ -30,11 +30,10 @@ Verificação do `developer` em e94f613 (relatório do builder-02): `npm test` 3
 - **SQL nos testes:** `tests/helpers/banco.ts` carrega `supabase/[0-8]\d-*.sql` (01 a 89). `90-cron.sql` fica de fora. Há dois arquivos 09 (`09-meta.sql` e, na branch fiscal, `09-fiscal.sql`), independentes.
 - **Builders do Maestri:** o dono voltou a liberar delegação em 13/11. builder-03 fez a Meta parte 1 (PR #26); builder-02 fez a base de conhecimento (PR #29).
 
-## 3. `main` está bagunçada
+## 3. `main` e `developer`
 
-- `main` recebeu PRs direto (#18 T13 parte B, #19 T11) e depois o **revert do #19** (#20, Pedro, 10:40). Hoje `main` = developer antigo + T13 parte B, **sem** T11, T14, T15, T16 e o resto.
-- O que estava só em `main` (T13 parte B) já foi levado ao `developer` (PR #28). O revert **não** foi trazido.
-- **Decisão do dono:** levar `developer → main` (PR), o que também publica em produção (ver §5). Não fazer `push --force` nem reset em `main`.
+- `main` tinha recebido PRs direto (#18, #19) e o **revert do #19** (#20). Em 13/11 o dono autorizou levar `developer → main`: PR #31 (313f471). Como um merge comum reaplicaria o revert e apagaria 15 arquivos, a branch do PR partiu do `developer` com `git merge -s ours origin/main`. Resultado: **árvore de `main` idêntica à do `developer`**.
+- Daqui em diante, `developer → main` é PR normal, sempre com ok do dono (merge em `main` publica em produção).
 
 ## 4. Pendências
 
@@ -49,14 +48,20 @@ Verificação do `developer` em e94f613 (relatório do builder-02): `npm test` 3
 
 **Do dono:**
 1. Smoke real do modelo: `JITI_ALIAS='{"@":"./src","server-only":"./tests/helpers/vazio.ts"}' npx jiti scripts/agente-smoke.ts --confirmo` e de novo com `--sem-streaming`.
-2. SQL no Supabase: `01` a `08` já rodados. Falta `09-meta.sql` e depois `select public.canal_conectar('<id do MEI>', 'instagram', '17841429113044909');`. Depois `10-conhecimento.sql` e, para a demo, `seed/demo-completo.sql` numa conta separada (criar por `/cadastro`; `/setup` só funciona com o banco vazio).
-3. Autorizar o PR `developer → main` (deploy de produção).
+2. Publicar o app na Meta (modo Live) depois que `/privacidade` e `/exclusao-de-dados` estiverem no ar (builder-03, `feat/paginas-legais`). Webhook já cadastrado pelo dono, campo `messages` assinado e @avoralabss.br inscrita no app (`POST /{ig-id}/subscribed_apps`, 13/11). DMs reais não chegam em `dev_mode`: a Meta exige app publicado.
+3. `90-cron.sql` no Supabase, com `<APP_URL>` e `<CRON_SECRET>` trocados (sem commitar).
 4. Revogar na Featherless a chave antiga `rc_0d88…7341`, que está no histórico do git (o repo agora é **público**). A chave atual é outra.
+
+## 4b. Banco real (Supabase)
+
+- Rodados: `01` a `10` (o `05` atual foi reaplicado em 13/11 pelo orquestrador: o banco estava com a `tarefas_gerar_followups(int)` antiga). Falta só o `90-cron.sql`.
+- MEIs: "paulo eletricista" (conta do dono, com o Instagram @avoralabss.br ligado em `canais_conectados`), "Fotografo" (Victor) e **"Lima Reparos e Climatização"** (conta de demonstração do dono, seed `demo-completo.sql` rodado em 13/11: 20 clientes, 29 serviços nos 8 status, 15 mensagens, 4 tarefas, 6 memórias, 41 itens de conhecimento).
+- O dono pôs `DATABASE_URL` (session pooler) no `.env.local`. A senha tem caracteres especiais: não usar `new URL()`/`connectionString`; separar pelo último `@`. Rodar SQL no banco real só com pedido do dono.
 
 ## 5. Deploy (Vercel)
 
 - Projeto `mei-agente` (time talescavalcantis-projects), região `gru1`. Produção: **https://meiagente.talescavalcanti.dev** (também `mei-agente.vercel.app`).
-- Em produção está o commit `3a124e1` de `main` (antes do revert), publicado à mão pela CLI.
+- Em produção está `main` em 313f471 (= `developer` 48ba78b), publicado pela integração com o GitHub. Conferido: `/api/health` 200, `/cadastro` 200, `/api/meta/webhook` 403 sem token e 200 no handshake com o token.
 - O repositório GitHub está ligado ao projeto: merge em `main` vira deploy de produção; push em outra branch vira preview (atrás do login da Vercel).
 - Variáveis em Production **e** Preview: as do `.env.local` mais `META_ACCESS_TOKEN`, `META_APP_SECRET`, `META_APP_ID`, `INSTAGRAM_ACCOUNT_ID`, `META_WEBHOOK_VERIFY_TOKEN`. Preview usa o mesmo Supabase e a mesma chave da Featherless que a produção.
 - O repositório ficou público (13/11) para a Vercel aceitar deploy de commits de outros autores no plano Hobby.

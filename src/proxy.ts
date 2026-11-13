@@ -19,6 +19,9 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
 /** Rotas que existem justamente para quem não tem sessão. */
 const PUBLIC_PAGES = new Set(["/login", "/setup", "/cadastro"]);
 
+/** Rotas abertas para todo mundo, com ou sem sessão: as páginas legais que a Meta exige. */
+const OPEN_PAGES = new Set(["/privacidade", "/exclusao-de-dados"]);
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -27,6 +30,7 @@ export async function proxy(req: NextRequest) {
      e os crons do pg_cron não têm nem podem ter sessão (autenticados por
      CRON_SECRET). Redirecionar essas para /login quebraria a operação. */
   if (pathname.startsWith("/api/")) return NextResponse.next();
+  if (OPEN_PAGES.has(pathname)) return NextResponse.next();
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const session = await verifySession(token);

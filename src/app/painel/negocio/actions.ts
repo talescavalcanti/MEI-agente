@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/dal";
-import { dadosDoFormulario, meiDoUsuario, rpcDb, salvarMei } from "@/lib/dominio/mei";
+import { dadosDoFormulario, meiDoUsuario, mensagemDeRegra, requireMei, rpcDb, salvarMei } from "@/lib/dominio/mei";
+import { documentoValido } from "@/lib/fiscal/documento";
 
 export type NegocioState = { error?: string; salvo?: boolean } | undefined;
 
@@ -31,5 +32,49 @@ export async function salvarNegocio(_prev: NegocioState, formData: FormData): Pr
   revalidatePath("/painel", "layout");
   // Fora de try/catch: `redirect` funciona lançando.
   if (primeiraVez) redirect("/painel");
+  return { salvo: true };
+}
+
+export type DadosFiscaisState = { error?: string; salvo?: boolean } | undefined;
+
+const CAMPOS_FISCAIS = [
+  "cnpj",
+  "inscricao_municipal",
+  "municipio",
+  "codigo_tributacao",
+  "nbs",
+  "descricao_padrao_nota",
+] as const;
+
+/**
+ * Dados fiscais do negócio, para a nota (Task 17). Só esses campos passam; o
+ * MEI vem da sessão. O CNPJ é conferido aqui antes do banco (o SQL confere de
+ * novo), e o erro `regra:` do SQL volta como frase. Campo em branco não
+ * apaga o que já estava (mesma regra do `mei_dados_fiscais_salvar`).
+ */
+export async function salvarDadosFiscais(_prev: DadosFiscaisState, formData: FormData): Promise<DadosFiscaisState> {
+  const { mei } = await requireMei();
+
+  const dados: Record<string, string> = {};
+  for (const campo of CAMPOS_FISCAIS) {
+    const v = formData.get(campo);
+    if (typeof v === "string" && v.trim()) dados[campo] = v.trim().slice(0, 500);
+  }
+  if (dados.cnpj) {
+    const cnpj = documentoValido(dados.cnpj);
+    if (!cnpj || cnpj.length !== 14) return { error: "CNPJ do negócio inválido." };
+    dados.cnpj = cnpj;
+  }
+
+  try {
+    await rpcDb("mei_dados_fiscais_salvar", { p_mei: mei.id, p_dados: dados });
+  } catch (e) {
+    const frase = mensagemDeRegra(e);
+    if (frase) return { error: frase };
+    console.error("mei_dados_fiscais_salvar falhou:", e);
+    return { error: "Não deu pra salvar agora. Tente de novo em instantes." };
+  }
+
+  revalidatePath("/painel", "layout");
   return { salvo: true };
 }
