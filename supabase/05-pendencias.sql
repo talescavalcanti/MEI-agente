@@ -157,11 +157,15 @@ begin
 end;
 $$;
 
--- Agendador (todos os MEIs): abre tarefa de follow-up para cada proposta
--- parada que não tem tarefa aberta, nem tarefa ignorada hoje, nem tarefa feita
--- há menos de `p_dias` dias. Devolve só as tarefas criadas nesta rodada; rodar
--- de novo não duplica.
-create or replace function public.tarefas_gerar_followups(p_dias int default 3)
+-- Agendador: abre tarefa de follow-up para cada proposta parada que não tem
+-- tarefa aberta, nem tarefa ignorada hoje, nem tarefa feita há menos de
+-- `p_dias` dias. Sem `p_mei`, de todos os MEIs (cron); com `p_mei`, só daquele
+-- MEI ("Verificar agora" no Início). Devolve só as tarefas criadas nesta
+-- rodada; rodar de novo não duplica.
+-- A versão antiga, só com `p_dias`, sai: senão as duas brigariam pela chamada.
+drop function if exists public.tarefas_gerar_followups(int);
+
+create or replace function public.tarefas_gerar_followups(p_dias int default 3, p_mei uuid default null)
 returns table (mei_id uuid, tarefa_id uuid, servico_id uuid)
 language plpgsql
 set search_path = ''
@@ -178,6 +182,7 @@ begin
     from public.servicos s
     join public.orcamentos o on o.servico_id = s.id and o.mei_id = s.mei_id
     where s.status = 'aguardando_resposta'
+      and (p_mei is null or s.mei_id = p_mei)
       and o.enviado_em is not null
       and o.enviado_em <= now() - make_interval(days => v_dias)
       and not exists (
@@ -243,12 +248,12 @@ revoke execute on function public.hoje_sp() from public, anon, authenticated;
 revoke execute on function public.mensagens_tarefa_valida() from public, anon, authenticated;
 revoke execute on function public.pendencia_dias_validos(int) from public, anon, authenticated;
 revoke execute on function public.propostas_pendentes(uuid, int) from public, anon, authenticated;
-revoke execute on function public.tarefas_gerar_followups(int) from public, anon, authenticated;
+revoke execute on function public.tarefas_gerar_followups(int, uuid) from public, anon, authenticated;
 revoke execute on function public.tarefa_fechar(uuid, uuid, text) from public, anon, authenticated;
 grant execute on function public.hoje_sp() to service_role;
 grant execute on function public.pendencia_dias_validos(int) to service_role;
 grant execute on function public.propostas_pendentes(uuid, int) to service_role;
-grant execute on function public.tarefas_gerar_followups(int) to service_role;
+grant execute on function public.tarefas_gerar_followups(int, uuid) to service_role;
 grant execute on function public.tarefa_fechar(uuid, uuid, text) to service_role;
 
 -- O PostgREST precisa enxergar a tabela e as funções novas sem esperar.

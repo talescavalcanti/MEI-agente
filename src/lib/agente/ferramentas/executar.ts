@@ -5,7 +5,7 @@ import { renderMinuta } from "@/lib/documentos/contrato";
 import { valoresDivergentes } from "@/lib/documentos/divergencias";
 import { A_PREENCHER } from "@/lib/documentos/formato";
 import type { DadosDocumento } from "@/lib/documentos/tipos";
-import type { Contrato, ItemVisto, Mensagem, Orcamento, Rpc } from "@/lib/dominio/tipos";
+import type { ConhecimentoAchado, Contrato, ItemVisto, Mensagem, Orcamento, Rpc } from "@/lib/dominio/tipos";
 import { instantSP } from "@/lib/tz";
 import { FERRAMENTAS } from "./definicoes";
 
@@ -165,6 +165,28 @@ const EXECUTORES: Record<string, (ctx: Ctx, e: Entrada) => Promise<Saida>> = {
     // `memoria_salvar` nasce na Task 9 (supabase/06-agente.sql).
     await rpc("memoria_salvar", { p_mei: meiId, p_fato: e.fato });
     return { valor: { ok: true } };
+  },
+
+  async consultar_conhecimento({ rpc, meiId }, e) {
+    const achados = (await rpc("conhecimento_buscar", {
+      p_mei: meiId,
+      p_termo: e.termo,
+      p_cliente: e.cliente_id,
+      p_tipo: e.tipo,
+    })) as ConhecimentoAchado[];
+    // A relevância só ordena; não vale o contexto do modelo.
+    const resultados = achados.map((a) => ({
+      id: a.id,
+      tipo: a.tipo,
+      titulo: a.titulo,
+      conteudo: a.conteudo,
+      cliente_id: a.cliente_id,
+      cliente_nome: a.cliente_nome,
+    }));
+    if (!resultados.length) {
+      return { valor: { resultados, mensagem: "Nada encontrado na base de conhecimento. Não invente: pergunte ao usuário." } };
+    }
+    return { valor: { resultados } };
   },
 };
 

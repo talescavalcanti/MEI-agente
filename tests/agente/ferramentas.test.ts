@@ -51,6 +51,7 @@ describe("FERRAMENTAS", () => {
       "listar_propostas_pendentes",
       "registrar_pagamento",
       "salvar_memoria",
+      "consultar_conhecimento",
     ]);
   });
 

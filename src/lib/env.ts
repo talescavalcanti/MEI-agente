@@ -8,9 +8,20 @@ import "server-only";
 function required(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`Variável de ambiente ausente: ${name}`);
-  // A Vercel guarda o valor literalmente: `"abc"` colado com aspas vira um
-  // segredo com aspas dentro, e o erro só aparece longe daqui (assinatura que
-  // não bate, URL inválida). Melhor parar na inicialização, com o nome.
+  return semAspas(name, v);
+}
+
+/** Opcional: ausente ou vazia vira "" (recurso desligado), mas aspas ainda são erro. */
+function optional(name: string): string {
+  const v = process.env[name];
+  if (!v) return "";
+  return semAspas(name, v);
+}
+
+// A Vercel guarda o valor literalmente: `"abc"` colado com aspas vira um
+// segredo com aspas dentro, e o erro só aparece longe daqui (assinatura que
+// não bate, URL inválida). Melhor parar na inicialização, com o nome.
+function semAspas(name: string, v: string): string {
   if (v.length >= 2 && /^(["'])[\s\S]*\1$/.test(v)) {
     throw new Error(
       `Variável de ambiente ${name} está entre aspas. Foi colada com aspas na Vercel? Tire as aspas do valor.`
@@ -49,4 +60,9 @@ export const env = {
 
   // Teto de tokens por MEI por dia (controle de custo, README §9).
   limiteDiarioTokens: positiveInt("AGENTE_LIMITE_DIARIO_TOKENS", 400_000),
+
+  // Webhook da Meta (Instagram e WhatsApp). Opcionais: sem eles o webhook
+  // responde 403/503 e o resto do app segue normal.
+  metaAppSecret: optional("META_APP_SECRET"),
+  metaWebhookVerifyToken: optional("META_WEBHOOK_VERIFY_TOKEN"),
 };

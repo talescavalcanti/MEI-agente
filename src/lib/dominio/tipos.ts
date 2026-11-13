@@ -331,3 +331,32 @@ export type FollowupGerado = {
   tarefa_id: string;
   servico_id: string;
 };
+
+// ---------------------------------------------------------------------------
+// Base de conhecimento (supabase/10-conhecimento.sql)
+// ---------------------------------------------------------------------------
+
+export type ConhecimentoTipo = "nota_cliente" | "atendimento" | "preco" | "faq" | "politica";
+
+/** Linha de `conhecimento` (sem a coluna `busca`, que é só do índice). */
+export type Conhecimento = {
+  id: string;
+  mei_id: string;
+  cliente_id: string | null;
+  tipo: ConhecimentoTipo;
+  titulo: string;
+  conteudo: string;
+  criado_em: string;
+  atualizado_em: string;
+};
+
+/** Linha de `conhecimento_buscar`: conteúdo cortado em 600 caracteres. */
+export type ConhecimentoAchado = {
+  id: string;
+  tipo: ConhecimentoTipo;
+  titulo: string;
+  conteudo: string;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  relevancia: number;
+};

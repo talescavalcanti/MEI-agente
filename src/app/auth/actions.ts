@@ -14,7 +14,7 @@ import {
   registerLoginFailure,
 } from "@/lib/auth/login-limit";
 
-export type AuthState = { error?: string } | undefined;
+export type AuthState = { error?: string; email?: string; name?: string } | undefined;
 
 /**
  * Limpa o Router Cache do cliente inteiro.
@@ -42,7 +42,7 @@ function dropClientCache() {
 function safeNext(raw: string | null): string {
   if (!raw) return "/painel";
   if (!raw.startsWith("/") || raw.startsWith("//")) return "/painel";
-  if (raw.startsWith("/login") || raw.startsWith("/setup")) return "/painel";
+  if (raw.startsWith("/login") || raw.startsWith("/setup") || raw.startsWith("/cadastro")) return "/painel";
   return raw;
 }
 
@@ -51,14 +51,14 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   const password = String(formData.get("password") ?? "");
   const next = safeNext(String(formData.get("de") ?? "") || null);
 
-  if (!email || !password) return { error: "Preencha email e senha." };
+  if (!email || !password) return { error: "Preencha email e senha.", email };
 
   // Limite de tentativas (src/lib/auth/login-limit.ts). A contagem é pelo
   // email DIGITADO, exista a conta ou não, e o aviso é o mesmo nos dois
   // casos — o bloqueio não revela quem tem conta aqui.
   const keys = loginKeys(email, clientIp((await headers()).get("x-forwarded-for")));
   if (await loginBlocked(keys)) {
-    return { error: "Muitas tentativas. Espere alguns minutos e tente de novo." };
+    return { error: "Muitas tentativas. Espere alguns minutos e tente de novo.", email };
   }
 
   const user = await findForLogin(email);
@@ -69,13 +69,13 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   if (!user) {
     await fakeVerify();
     await registerLoginFailure(keys);
-    return { error: "Email ou senha incorretos." };
+    return { error: "Email ou senha incorretos.", email };
   }
 
   const ok = await verifyPassword(password, user.password_hash);
   if (!ok) {
     await registerLoginFailure(keys);
-    return { error: "Email ou senha incorretos." };
+    return { error: "Email ou senha incorretos.", email };
   }
 
   await clearLoginFailures(email);
@@ -93,27 +93,25 @@ export async function logout() {
 }
 
 /**
- * Cria o primeiro admin. Só funciona com a tabela vazia.
- *
- * A contagem é refeita aqui, e não só na página: a página é a porta que o
- * usuário vê, esta ação é a porta que vale. Sem a recontagem, alguém poderia
- * chamar a Server Action direto e criar um segundo admin depois que o primeiro
- * já existe — Server Action é endpoint público, do ponto de vista de quem ataca.
+ * Cria uma conta de usuário. Se a tabela `users` estiver vazia, o primeiro
+ * usuário nasce `admin`; os seguintes nascem `user`. Depois de criar a conta,
+ * inicia a sessão e manda cadastrar o negócio em `/painel/negocio`.
  */
-export async function setupFirstAdmin(_prev: AuthState, formData: FormData): Promise<AuthState> {
-  const probe = await probeUsers();
-  if (!probe.ok) return { error: `Banco indisponível: ${probe.message}` };
-  if (!probe.empty) return { error: "O primeiro administrador já foi criado." };
-
+export async function criarConta(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!name) return { error: "Informe seu nome." };
-  if (!email.includes("@")) return { error: "Informe um email válido." };
+  const probe = await probeUsers();
+  if (!probe.ok) return { error: `Banco indisponível: ${probe.message}`, name, email };
+
+  if (!name) return { error: "Informe seu nome.", name, email };
+  if (!email.includes("@")) return { error: "Informe um email válido.", name, email };
 
   const bad = validatePassword(password);
-  if (bad) return { error: bad };
+  if (bad) return { error: bad, name, email };
+
+  const role = probe.empty ? "admin" : "user";
 
   let created;
   try {
@@ -121,15 +119,19 @@ export async function setupFirstAdmin(_prev: AuthState, formData: FormData): Pro
       email,
       name,
       password_hash: await hashPassword(password),
-      role: "admin",
+      role,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Não deu pra criar o administrador." };
+    return { error: e instanceof Error ? e.message : "Não deu pra criar a conta.", name, email };
   }
-  if (!created) return { error: "Não deu pra criar o administrador. Tente de novo." };
+  if (!created) return { error: "Não deu pra criar a conta. Tente de novo.", name, email };
 
-  await createSessionCookie({ sub: created.id, role: "admin", ver: 1 });
+  await createSessionCookie({ sub: created.id, role, ver: 1 });
   dropClientCache();
   // Conta criada, negócio ainda não: o próximo passo do primeiro acesso.
   redirect("/painel/negocio");
+}
+
+export async function setupFirstAdmin(prev: AuthState, formData: FormData): Promise<AuthState> {
+  return criarConta(prev, formData);
 }

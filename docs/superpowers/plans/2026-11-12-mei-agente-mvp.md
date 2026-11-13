@@ -73,6 +73,7 @@ MEIagente/
 │   ├── 05-pendencias.sql      tarefas + detecção de proposta parada
 │   ├── 06-agente.sql          conversas, conversa_mensagens, agente_acoes, agente_uso, memorias
 │   ├── 07-consultas.sql       funções de listagem das telas (Task 14)
+│   ├── 08-proatividade.sql    lembretes de propostas paradas e Início (Task 15)
 │   ├── 90-cron.sql            job do pg_cron (placeholder de segredo)
 │   └── seed/demo.sql          dados de demonstração
 ├── src/lib/
@@ -350,9 +351,10 @@ Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administ
 - Consumes: `requireUserApi`, `rodarTurno`, `criarLlm`, `montarSystem`, `blocoContexto`, `db`.
 - Produces: `POST /api/chat` com corpo `{ conversaId: string | null, texto: string }` → `200 application/x-ndjson`, uma linha por `Evento`. `401` sem sessão; `400` texto vazio ou > 4000 caracteres; `409` usuário sem MEI. `runtime = "nodejs"`, `maxDuration = 120`, cabeçalhos `PRIVATE_HEADERS`. `prepararTurno(userId): Promise<{ deps, mei }>` em `servidor.ts` (reusado pelo cron do Task 15).
 
-- [ ] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
-- [ ] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
-- [ ] **Step 3:** Commit `feat: rota de chat com streaming`.
+- [x] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
+- [x] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
+- [x] **Step 3:** Commit `feat: rota de chat com streaming`.
+- **Feito:** `prepararTurno(userId)` devolve `null` quando o usuário não tem MEI (a rota responde 409). Para o agendador (T15), que só tem o `mei_id`, `servidor.ts` também exporta `depsDoMei(meiId, { rpc?, agora? })`; `textoComContexto(deps, mei, texto)` prefixa o `blocoContexto` com as memórias. O turno roda dentro de `after()` para terminar de gravar mesmo se a aba fechar. Falha ao preparar o turno (banco fora) responde 500 antes do stream. Testes em `tests/agente/chat-rota.test.ts` (rota real com PGlite e LLM falso).
 
 ### Task 12: Primeiro acesso e "Meu negócio"
 
@@ -384,6 +386,7 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - [ ] **Step 5:** Verificação manual com o cenário do README §3: as duas falas produzem 3 cartões; aprovar a mensagem libera "Copiar"; clique duplo em Aprovar não duplica nada; F5 mantém conversa e estados.
 - [ ] **Step 6:** Commit `feat: chat do agente com cartoes de aprovacao`.
 - **Parte A feita (PR #14):** `actions.ts`, `cartao-dados.ts`, `Cartao.tsx`, `EditarItem.tsx`, `tests/agente/cartao.test.ts`. As 4 actions devolvem `{ cartao: CartaoDados } | { erro: string }`. `<Cartao cartao={{tipo,id}} inicial?={CartaoDados} />`: sem `inicial`, chama `verItem` sozinho (serve para o stream e para o F5). **Falta a parte B:** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` (Steps 1 e 5).
+- **Parte B (13/11):** `page.tsx`, `Chat.tsx`, `ndjson.ts` e `tests/agente/ndjson.test.ts` vieram do PR #18 (mergeado por engano em `main`) e entraram no `developer` pelo PR #28 (cherry-pick de 58aad78 e 90d27d0). Step 5 (verificação manual) pendente.
 
 ### Task 14: Telas de consulta
 
@@ -393,10 +396,11 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 **Interfaces:**
 - Consumes: `cliente_buscar`, `servico_listar`, `agenda_listar`, `item_ver`, `renderOrcamento`; novas funções de leitura em `04-documentos.sql`: `documentos_listar(p_mei)`, `mensagens_listar(p_mei, p_status text default null)`.
 
-- [ ] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
-- [ ] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
+- [x] **Step 1:** Listas somente leitura, cada uma com `PageHeader` e `EmptyModule` no vazio ("Nenhum cliente ainda. Conte um serviço ao agente e ele cadastra para você."). Serviços com filtro por estado (`Segmented`). Mensagens reaproveita `Cartao`.
+- [x] **Step 2:** `documentos/[tipo]/[id]`: página de impressão (orçamento renderizado ou minuta), `@media print` escondendo a casca, botão "Imprimir / salvar PDF". Item de outro MEI → `notFound()`.
 - [ ] **Step 3:** `npm run build` e conferência visual das cinco telas com o seed.
-- [ ] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- [x] **Step 4:** Commit `feat: telas de consulta e impressao de documentos`.
+- **Feito (PR #17):** cinco telas, página de impressão e `07-consultas.sql` com testes. Mensagens ainda é lista simples: trocar pelo `Cartao` junto com a parte B da Task 13. Step 3 (conferência visual com o seed) pendente.
 
 ### Task 15: Proatividade (agendador e Início)
 
@@ -407,23 +411,38 @@ Comportamento da tela: lista de conversas + "Nova conversa"; texto do assistente
 - Consumes: `tarefas_gerar_followups`, `propostas_pendentes`, `rodarTurno`, `tarefa_fechar`.
 - Produces: `sugerirFollowups(deps, meiId): Promise<{ sugeridas: number }>` — para cada tarefa aberta sem mensagem ligada, roda `rodarTurno` com `origem: "agendador"` e o texto `Proposta parada: serviço #<n> (<cliente>, <descrição>, <valor>) sem resposta há <d> dias. Redija um lembrete curto e cordial com redigir_mensagem (objetivo lembrete, tarefa_id <id>).`; máximo 5 por execução. Rota `POST|GET /api/cron/pendencias` protegida por `CRON_SECRET` (mesmo `authorized()` do meu-chat). Action `verificarPendenciasAgora()` (mesma função, só para o MEI logado). Job `mei-agente-pendencias` `'0 11 * * *'` (08:00 em São Paulo).
 
-- [ ] **Step 1:** Teste com LLM falso: uma proposta parada há 4 dias → 1 mensagem `rascunho` com `tarefa_id`; rodar de novo → continua 1; 7 propostas paradas → 5 sugeridas.
-- [ ] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
-- [ ] **Step 5:** Início: "Hoje" (agendamentos do dia), "Esperando sua decisão" (rascunhos abertos, com `Cartao`), "Propostas paradas" (com **[Ver lembrete] [Ignorar]** e botão "Verificar agora"), atalho para o agente.
-- [ ] **Step 6:** Commit `feat: acompanhamento de propostas paradas`.
+- [x] **Step 1:** Teste com LLM falso: uma proposta parada há 4 dias → 1 mensagem `rascunho` com `tarefa_id`; rodar de novo → continua 1; 7 propostas paradas → 5 sugeridas.
+- [x] **Step 2–4:** Run (FAIL) → implementar → Run (PASS).
+- [x] **Step 5:** Início: "Hoje" (agendamentos do dia), "Esperando sua decisão" (rascunhos abertos, com `Cartao`), "Propostas paradas" (com **[Ver lembrete] [Ignorar]** e botão "Verificar agora"), atalho para o agente.
+- [x] **Step 6:** Commit `feat: acompanhamento de propostas paradas`.
+- **Feito:** `src/lib/agente/pendencias.ts` com `sugerirFollowups(deps, meiId, limite = 5)` (devolve `{ sugeridas, tentativas }`; conta pelo banco: só vale lembrete gravado com a tarefa ligada) e `rodarAgendador(rpc, depsDe, { meiId?, limite? })` (abre as tarefas e pede os lembretes, teto de 5 turnos por execução no total; falha num MEI não para os outros). O pedido ao agente leva também `cliente_id` e `servico_id`, que o `redigir_mensagem` exige. Cada lembrete vira uma conversa `agendador` com o contexto do negócio na frente (`prefixarContexto` em `contexto.ts`, também usado pelo chat).
+  - **SQL:** `05-pendencias.sql`: `tarefas_gerar_followups(p_dias, p_mei uuid default null)` (com `p_mei`, só aquele MEI, para o "Verificar agora" não mexer nos outros; a versão só com `p_dias` é removida). Novo `08-proatividade.sql`: `mei_por_id`, `followups_sem_lembrete(p_mei, p_limite)`, `followups_meis_pendentes()` (cron) e `propostas_paradas(p_mei, p_dias)` (Início: com tarefa aberta ou que nunca teve tarefa, mais o lembrete). Lembrete descartado não é redigido de novo; para parar de lembrar, Ignorar.
+  - **Rota:** `GET|POST /api/cron/pendencias` com `Authorization: Bearer <CRON_SECRET>` (comparação em tempo constante), `maxDuration = 300`. `90-cron.sql` usa `pg_net` e tem dois placeholders: `<APP_URL>` e `<CRON_SECRET>`.
+  - **Início:** Hoje, Esperando sua decisão (até 6 cartões; o lembrete de proposta parada não se repete aqui), Propostas paradas (`Pendencias.tsx`, com Ver lembrete, Ignorar e Verificar agora) e atalho para o agente. Actions em `src/app/painel/actions.ts` usam `refresh()` do `next/cache`.
+  - **Pendente:** conferência visual do Início com o seed (precisa de Supabase de verdade) e configurar o `90-cron.sql` no deploy.
 
 ### Task 16: Demo, README e deploy
 
 **Files:**
 - Create: `supabase/seed/demo.sql`, `scripts/smoke.sh`; Modify: `README.md` (§14 "Como rodar", status), `.env.example`
 
-- [ ] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
-- [ ] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
-- [ ] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
+- [x] **Step 1:** `demo.sql` (idempotente, recebe o email do usuário): MEI "Refrigeração Bueno" (técnico de manutenção, Goiânia); 5 clientes; serviço pago, serviço agendado para amanhã, e **o caso do README**: Carlos, troca de fiação, R$ 450, orçamento #009 enviado há 4 dias, `aguardando_resposta`.
+- [x] **Step 2:** `smoke.sh` (só GETs): `/api/health` ok; `/painel` sem sessão redireciona para `/login`; `/api/chat` sem sessão → 401; `/api/cron/pendencias` sem segredo → 401.
+- [x] **Step 3:** README §14 com os passos reais: criar projeto Supabase, rodar os SQL em ordem, `.env.local`, `npm install`, `npm run dev`, `/setup`, seed.
 - [ ] **Step 4:** Ensaiar o roteiro de demo: (1) fala do README → cartões → aprovar e copiar; (2) "Verificar agora" → lembrete do Carlos; (3) "me dá uma ideia de post para essa semana" → rascunho de post.
 - [ ] **Step 5:** Commit `docs: como rodar e dados de demonstracao`. Deploy na Vercel **só com o ok do dono**.
 
 ---
+- **Feito (PR #16):** seed (o #009 e a data de envio exigiram escrita direta no seed, documentada lá), `smoke.sh` pronto mas ainda sem rodar (faltam `/api/chat` e `/api/cron/pendencias`), README §14. Steps 4 e 5 (ensaio e deploy) pendentes.
+- **Deploy (13/11, ok do dono):** projeto Vercel `mei-agente`, produção em https://meiagente.talescavalcanti.dev (região gru1), variáveis em Production e Preview. Ensaio (Step 4) pendente.
+
+
+## Desvios aprovados pelo dono em 13/11 (fora do MVP)
+
+- **Integração com a Meta, parte 1 (receber):** PR #26. `supabase/09-meta.sql` (`canais_conectados`, `mensagens_recebidas`, `canal_conectar`, `mensagem_recebida_registrar`, `mensagens_recebidas_listar`), `src/lib/meta/{assinatura,eventos}.ts`, rota `/api/meta/webhook` (GET handshake, POST com `X-Hub-Signature-256`). Variáveis `META_*` opcionais: sem elas a integração fica desligada. `mensagem_recebida_registrar` é exceção consciente à regra "p_mei primeiro" (o webhook só conhece a conta; a conta aponta o MEI). Ainda não mostra as mensagens em tela.
+- **Integração com a Meta, parte 2 (enviar o que foi aprovado):** não começada. A regra "nada de envio automático" continua: o envio só sai por clique do usuário num item já aprovado.
+- **Base de conhecimento e seed sintético completo (PR #29, builder-02):** `supabase/10-conhecimento.sql`: tabela `conhecimento` (tipos `nota_cliente`, `atendimento`, `preco`, `faq`, `politica`; `nota_cliente` e `atendimento` exigem cliente do mesmo MEI; upsert por tipo, cliente e título). Busca full-text em português com `sem_acento` (título e nome do cliente com peso A, conteúdo com peso B), sem embeddings e sem API paga. O tsvector é calculado em `conhecimento_salvar`: renomear o cliente não reindexa. `conhecimento_buscar(p_mei, p_termo, p_cliente?, p_tipo?, p_limite=5)` junta os termos com OU, limite de 1 a 10, conteúdo cortado em 600 caracteres. Ferramenta `consultar_conhecimento` (17ª, só leitura, sem cartão; vazio devolve "Nada encontrado… não invente") e parágrafo no prompt. `supabase/seed/demo-completo.sql`: MEI fictício "Lima Reparos e Climatização" com 20 clientes, 29 serviços nos 8 status, documentos e mensagens em todos os estados, 4 propostas paradas, 6 memórias e 41 itens de conhecimento; conta separada da do `demo.sql`. `tests/helpers/banco.ts` carrega `supabase/[0-8]\d-*.sql`. Não verificado: modelo real chamando a ferramenta e o seed no Supabase.
+- **App na Meta:** app `MEIagente` (1677711663821244) no Business Portfolio `MEIagente`, caso de uso Instagram com login unificado, conta @avoralabss.br, token de System User sem expiração. WhatsApp ainda não adicionado ao app.
 
 ## Provedor: Featherless
 
