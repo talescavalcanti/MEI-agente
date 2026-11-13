@@ -33,6 +33,7 @@ describe("PROMPT_SISTEMA", () => {
       "salvar_memoria",
       "contexto_do_negocio",
       "orientação jurídica",
+      "consultar_conhecimento",
     ]) {
       expect(PROMPT_SISTEMA).toContain(trecho);
     }
