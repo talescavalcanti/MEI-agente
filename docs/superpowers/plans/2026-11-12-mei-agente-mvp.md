@@ -350,9 +350,10 @@ Conteúdo do prompt (decidido aqui, redação livre): papel (assistente administ
 - Consumes: `requireUserApi`, `rodarTurno`, `criarLlm`, `montarSystem`, `blocoContexto`, `db`.
 - Produces: `POST /api/chat` com corpo `{ conversaId: string | null, texto: string }` → `200 application/x-ndjson`, uma linha por `Evento`. `401` sem sessão; `400` texto vazio ou > 4000 caracteres; `409` usuário sem MEI. `runtime = "nodejs"`, `maxDuration = 120`, cabeçalhos `PRIVATE_HEADERS`. `prepararTurno(userId): Promise<{ deps, mei }>` em `servidor.ts` (reusado pelo cron do Task 15).
 
-- [ ] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
-- [ ] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
-- [ ] **Step 3:** Commit `feat: rota de chat com streaming`.
+- [x] **Step 1:** Implementar com `ReadableStream`; `rpc` = `(n, a) => db.rpc(n, a)` lançando o `error.message` do Supabase (preserva o prefixo `regra:`).
+- [x] **Step 2:** Verificar. Run: `npm run build` e, com `npm run dev`, `curl -N -X POST localhost:3000/api/chat -d '{"conversaId":null,"texto":"oi"}'`. Expected: `401` sem cookie.
+- [x] **Step 3:** Commit `feat: rota de chat com streaming`.
+- **Feito:** `prepararTurno(userId)` devolve `null` quando o usuário não tem MEI (a rota responde 409). Para o agendador (T15), que só tem o `mei_id`, `servidor.ts` também exporta `depsDoMei(meiId, { rpc?, agora? })`; `textoComContexto(deps, mei, texto)` prefixa o `blocoContexto` com as memórias. O turno roda dentro de `after()` para terminar de gravar mesmo se a aba fechar. Falha ao preparar o turno (banco fora) responde 500 antes do stream. Testes em `tests/agente/chat-rota.test.ts` (rota real com PGlite e LLM falso).
 
 ### Task 12: Primeiro acesso e "Meu negócio"
 
