@@ -7,6 +7,8 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     passWithNoTests: true,
     testTimeout: 30_000,
+    // Abrir o PGlite com todo o SQL passa dos 10s padrão sob a suíte inteira em paralelo.
+    hookTimeout: 30_000,
   },
   resolve: {
     alias: {
