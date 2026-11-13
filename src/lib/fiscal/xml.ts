@@ -40,6 +40,12 @@
  *   Cuidado: `prest` (prestador) e `emit` (emitente) também têm CNPJ/CPF. O
  *   tomador só pode ser lido de dentro de `toma`.
  *
+ * CNPJ alfanumérico: no XSD v1.01 o CNPJ (TSCNPJ) ainda é só numérico,
+ * pattern [0-9]{14}, maxLength 14; o CPF (TSCPF) é [0-9]{11}. A Receita emite
+ * CNPJ alfanumérico desde julho de 2026 (IN RFB 2.229/2024, ver
+ * `documento.ts`), então o leiaute deve mudar. O parser já aceita no tomador
+ * também [0-9A-Z]{12}[0-9]{2} (convertido para maiúsculas).
+ *
  * A documentação oficial não traz XML de exemplo de NFS-e emitida. A fixture
  * (tests/fiscal/fixtures/nfse-exemplo.xml) foi montada pelo XSD e conferida
  * com um validador XSD.
@@ -48,6 +54,7 @@
  * regex. Ele aceita prefixo de namespace nas tags e ignora comentários. Só
  * lê os campos acima.
  */
+import { normalizarDocumento } from "./documento";
 import type { ErroLeituraNfse, NfseLida } from "./tipos";
 
 const NAO_E_NFSE: ErroLeituraNfse = { erro: "Este arquivo não parece ser uma NFS-e." };
@@ -94,11 +101,14 @@ export function lerNfse(xml: string): NfseLida | ErroLeituraNfse {
   if (!numero || !/^[1-9]\d{0,12}$/.test(numero) || !infDps) return NAO_E_NFSE;
 
   const toma = bloco(infDps.conteudo, "toma");
-  const tomador = toma && (texto(toma.conteudo, "CNPJ") ?? texto(toma.conteudo, "CPF"));
+  const brutoTomador = toma && (texto(toma.conteudo, "CNPJ") ?? texto(toma.conteudo, "CPF"));
+  const tomador = brutoTomador && normalizarDocumento(brutoTomador);
   const servPrest = bloco(infDps.conteudo, "vServPrest");
   const valor = lerValor(servPrest && texto(servPrest.conteudo, "vServ"));
   const competencia = texto(infDps.conteudo, "dCompet");
-  if (!tomador || !/^(\d{11}|\d{14})$/.test(tomador)) return NAO_E_NFSE;
+  // CPF, CNPJ numérico ou CNPJ alfanumérico. O DV não é conferido aqui: a
+  // nota já foi emitida, e a comparação com o rascunho é feita no SQL.
+  if (!tomador || !/^(\d{11}|[0-9A-Z]{12}\d{2})$/.test(tomador)) return NAO_E_NFSE;
   if (valor === null || !competencia || !/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return NAO_E_NFSE;
 
   const id = /\bId\s*=\s*"NFS(\d{50})"/.exec(inf.atributos);

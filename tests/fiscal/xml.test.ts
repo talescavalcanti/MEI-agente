@@ -29,6 +29,11 @@ describe("lerNfse", () => {
     expect(lerNfse(xml)).toMatchObject({ tomador_documento: "52998224725" });
   });
 
+  it("tomador com CNPJ alfanumérico (fora do XSD v1.01, que ainda só aceita dígitos)", () => {
+    const xml = FIXTURE.replace("<CNPJ>11222333000181</CNPJ>", "<CNPJ>12ABC34501DE35</CNPJ>");
+    expect(lerNfse(xml)).toMatchObject({ tomador_documento: "12ABC34501DE35" });
+  });
+
   it("valor com ponto ou com vírgula é lido certo", () => {
     const comVirgula = FIXTURE.replace("<vServ>1500.00</vServ>", "<vServ>1.234,56</vServ>");
     expect(lerNfse(comVirgula)).toMatchObject({ valor: 1234.56 });
@@ -81,6 +86,8 @@ describe("CODIGOS_SUGERIDOS", () => {
     for (const c of CODIGOS_SUGERIDOS) {
       expect(c.codigo_tributacao).toMatch(/^[0-9]{6}$/);
       if (c.nbs !== null) expect(c.nbs).toMatch(/^[0-9]{9}$/);
+      // NBS escolhido pela descrição: o cartão pede para o MEI conferir.
+      expect(c.nbs_conferido).toBe(false);
       expect(c.descricao.length).toBeGreaterThan(0);
     }
   });

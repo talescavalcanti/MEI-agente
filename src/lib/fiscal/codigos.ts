@@ -8,7 +8,8 @@
 //     grava sem o zero à esquerda).
 //   - nbs: aba LISTA.NBS_v2.0, sem os pontos (1.2001.81.00 = 120018100).
 //     O Anexo B não liga cTribNac a NBS: o NBS de cada linha foi escolhido
-//     pela descrição, e todos existem na tabela oficial.
+//     pela descrição (todos existem na tabela oficial), por isso
+//     `nbs_conferido: false`.
 // Formato dos dois códigos e layout do XML: comentário no topo de `xml.ts`.
 import type { CodigoSugerido } from "./tipos";
 
@@ -17,6 +18,7 @@ export const CODIGOS_SUGERIDOS: CodigoSugerido[] = [
     atividade: "Eletricista",
     codigo_tributacao: "070202",
     nbs: "101061100",
+    nbs_conferido: false,
     descricao:
       "Execução, por empreitada ou subempreitada, de obras de construção civil, hidráulica ou elétrica (LC 116, item 7.02). NBS: serviços de instalação de fiação elétrica e componentes.",
   },
@@ -24,6 +26,7 @@ export const CODIGOS_SUGERIDOS: CodigoSugerido[] = [
     atividade: "Técnico de manutenção",
     codigo_tributacao: "140101",
     nbs: "120018100",
+    nbs_conferido: false,
     descricao:
       "Revisão, conserto, manutenção e conservação de máquinas, aparelhos e equipamentos (LC 116, item 14.01). NBS: manutenção e reparação de aparelhos eletroeletrônicos domésticos.",
   },
@@ -31,6 +34,7 @@ export const CODIGOS_SUGERIDOS: CodigoSugerido[] = [
     atividade: "Técnico de manutenção",
     codigo_tributacao: "140601",
     nbs: "101063200",
+    nbs_conferido: false,
     descricao:
       "Instalação e montagem de aparelhos, máquinas e equipamentos, com material fornecido pelo cliente (LC 116, item 14.06). NBS: instalação de equipamentos de ventilação e ar-condicionado.",
   },
@@ -38,6 +42,7 @@ export const CODIGOS_SUGERIDOS: CodigoSugerido[] = [
     atividade: "Fotógrafo",
     codigo_tributacao: "130301",
     nbs: "114081300",
+    nbs_conferido: false,
     descricao:
       "Fotografia e cinematografia, inclusive revelação, ampliação, cópia e reprodução (LC 116, item 13.03). NBS: serviços fotográficos e videográficos de eventos.",
   },

@@ -43,10 +43,41 @@ describe("documentoValido", () => {
   });
 });
 
+// CNPJ alfanumérico (IN RFB 2.229/2024): exemplo oficial do "Cálculo dos
+// dígitos verificadores de CNPJ alfanumérico" (Serpro/Receita Federal).
+describe("documentoValido com CNPJ alfanumérico", () => {
+  it("exemplo oficial 12.ABC.345/01DE-35 passa, normalizado em maiúsculas", () => {
+    expect(documentoValido("12.ABC.345/01DE-35")).toBe("12ABC34501DE35");
+    expect(documentoValido("12ABC34501DE35")).toBe("12ABC34501DE35");
+  });
+
+  it("minúsculas são aceitas e convertidas", () => {
+    expect(documentoValido("12.abc.345/01de-35")).toBe("12ABC34501DE35");
+  });
+
+  it("um caractere trocado é recusado", () => {
+    expect(documentoValido("12ABD34501DE35")).toBeNull();
+    expect(documentoValido("12ABC34501DE36")).toBeNull();
+    expect(documentoValido("12ABC34501DF35")).toBeNull();
+  });
+
+  it("DV com letra, CPF com letra ou caractere estranho são recusados", () => {
+    expect(documentoValido("12ABC34501DE3A")).toBeNull();
+    expect(documentoValido("5299822472A")).toBeNull();
+    expect(documentoValido("12ABC34501DE#35")).toBeNull();
+    expect(documentoValido("529.982.247-25abc")).toBeNull();
+  });
+});
+
 describe("formatarDocumento", () => {
   it("formata CPF e CNPJ", () => {
     expect(formatarDocumento("12345678909")).toBe("123.456.789-09");
     expect(formatarDocumento("12345678000195")).toBe("12.345.678/0001-95");
+  });
+
+  it("formata CNPJ alfanumérico como XX.XXX.XXX/XXXX-DV, em maiúsculas", () => {
+    expect(formatarDocumento("12ABC34501DE35")).toBe("12.ABC.345/01DE-35");
+    expect(formatarDocumento("12abc34501de35")).toBe("12.ABC.345/01DE-35");
   });
 
   it("aceita entrada já formatada e devolve o resto como veio", () => {

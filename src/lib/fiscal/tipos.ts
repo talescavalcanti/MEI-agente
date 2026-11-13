@@ -8,7 +8,7 @@ export type NfseLida = {
   chave_acesso: string | null;
   /** Valor do serviço (`vServ`), em reais. */
   valor: number;
-  /** CPF ou CNPJ do tomador, só dígitos. */
+  /** CPF ou CNPJ do tomador, normalizado: maiúsculas, sem pontuação (o CNPJ pode ser alfanumérico). */
   tomador_documento: string;
   /** Competência (`dCompet`), `AAAA-MM-DD`. */
   competencia: string;
@@ -23,7 +23,12 @@ export type CodigoSugerido = {
   atividade: string;
   /** cTribNac, 6 dígitos, conferido no Anexo B oficial. */
   codigo_tributacao: string;
-  /** NBS, 9 dígitos, conferido na aba de NBS do Anexo B; null se não houver um claro. */
+  /** NBS, 9 dígitos, existente na aba de NBS do Anexo B; null se não houver um claro. */
   nbs: string | null;
+  /**
+   * false quando o NBS foi escolhido pela descrição (o Anexo B não liga
+   * cTribNac a NBS): o cartão mostra "confira o NBS".
+   */
+  nbs_conferido: boolean;
   descricao: string;
 };
