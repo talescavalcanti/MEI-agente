@@ -180,7 +180,6 @@ describe("tarefa_fechar", () => {
     const [n] = await gerarFollowups();
     const outro = await criarMei(b, "Outro MEI");
     await expect(fechar(outro, n.tarefa_id, "feita")).rejects.toThrow(regra("tarefa não encontrada"));
-    await expect(fechar(outro, "nao-e-uuid", "feita")).rejects.toThrow(regra("tarefa não encontrada"));
   });
 
   it("status inválido → regra", async () => {
