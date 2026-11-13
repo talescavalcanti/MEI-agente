@@ -105,8 +105,12 @@ function motivo(finish: FinishReason, chamadas: number): Motivo {
 
 const uso = (u: LanguageModelUsage) => ({ entrada: u.inputTokens ?? 0, saida: u.outputTokens ?? 0 });
 
-/** Erro do provedor ou da rede → `Error` com mensagem em português (a causa fica em `cause`). */
-export function traduzirErro(erro: unknown): Error {
+/** Erro já traduzido: a mensagem vai direto ao usuário (o laço a mostra como veio). */
+export class ErroLlm extends Error {}
+
+/** Qualquer erro → `ErroLlm` com mensagem em português (a causa fica em `cause`). */
+export function traduzirErro(erro: unknown): ErroLlm {
+  if (erro instanceof ErroLlm) return erro;
   const e = RetryError.isInstance(erro) ? erro.lastError : erro;
   let msg = "Não foi possível falar com o modelo agora. Tente de novo.";
   if (APICallError.isInstance(e)) {
@@ -122,7 +126,7 @@ export function traduzirErro(erro: unknown): Error {
     // `fetch failed`, ECONNRESET, ENOTFOUND...
     msg = "Não consegui falar com o modelo. Confira a conexão e tente de novo.";
   }
-  return new Error(msg, { cause: e });
+  return new ErroLlm(msg, { cause: e });
 }
 
 type Resposta = {
@@ -138,59 +142,13 @@ export function llmComModelo(modelo: LanguageModel, opcoes: OpcoesLlm = {}): Llm
   const limite = opcoes.historico ?? HISTORICO_PADRAO;
 
   return {
-    async turno({ system, mensagens, ferramentas }, aoTexto) {
-      const chamada = {
-        model: modelo,
-        instructions: system,
-        messages: limitarHistorico(mensagens, limite),
-        tools: ferramentasDoSdk(ferramentas),
-      };
-
-      let r: Resposta;
-      if (streaming) {
-        // O erro chega como parte `error` do stream (e as promessas depois
-        // rejeitam sem detalhe): guarda o primeiro e relança traduzido.
-        const s = streamText({ ...chamada, onError: () => {} });
-        let erro: unknown;
-        try {
-          for await (const p of s.stream) {
-            if (p.type === "text-delta") aoTexto(p.text);
-            else if (p.type === "error") erro ??= p.error;
-          }
-          if (erro === undefined) {
-            const [finishReason, usage, responseMessages, toolCalls] = await Promise.all([
-              s.finishReason,
-              s.usage,
-              s.responseMessages,
-              s.toolCalls,
-            ]);
-            r = { finishReason, usage, responseMessages, toolCalls };
-          }
-        } catch (e) {
-          erro ??= e;
-        }
-        if (erro !== undefined) throw traduzirErro(erro);
-      } else {
-        let g;
-        try {
-          g = await generateText(chamada);
-        } catch (e) {
-          throw traduzirErro(e);
-        }
-        if (g.text) aoTexto(g.text);
-        r = g;
+    async turno(req, aoTexto) {
+      // Tudo que sai daqui vai ao usuário pelo laço: só erro em português.
+      try {
+        return await turno(req, aoTexto);
+      } catch (e) {
+        throw traduzirErro(e);
       }
-
-      // Chamada com entrada inválida (JSON quebrado) vem com o texto cru; o
-      // executor responde `entrada_invalida` e o modelo tenta de novo.
-      const chamadas: Chamada[] = r!.toolCalls.map((c) => ({ id: c.toolCallId, nome: c.toolName, entrada: c.input }));
-      return {
-        // Só o assistente: resultado de ferramenta quem monta é `resultado`.
-        mensagens: r!.responseMessages.filter((m) => m.role === "assistant"),
-        chamadas,
-        motivo: motivo(r!.finishReason, chamadas.length),
-        uso: uso(r!.usage),
-      };
     },
 
     resultado(itens) {
@@ -205,6 +163,61 @@ export function llmComModelo(modelo: LanguageModel, opcoes: OpcoesLlm = {}): Llm
       };
     },
   };
+
+  async function turno(...[{ system, mensagens, ferramentas }, aoTexto]: Parameters<Llm["turno"]>) {
+    const chamada = {
+      model: modelo,
+      instructions: system,
+      messages: limitarHistorico(mensagens, limite),
+      tools: ferramentasDoSdk(ferramentas),
+    };
+
+    let r: Resposta;
+    if (streaming) {
+      // O erro chega como parte `error` do stream (e as promessas depois
+      // rejeitam sem detalhe): guarda o primeiro e relança traduzido.
+      const s = streamText({ ...chamada, onError: () => {} });
+      let erro: unknown;
+      try {
+        for await (const p of s.stream) {
+          if (p.type === "text-delta") aoTexto(p.text);
+          else if (p.type === "error") erro ??= p.error;
+        }
+        if (erro === undefined) {
+          const [finishReason, usage, responseMessages, toolCalls] = await Promise.all([
+            s.finishReason,
+            s.usage,
+            s.responseMessages,
+            s.toolCalls,
+          ]);
+          r = { finishReason, usage, responseMessages, toolCalls };
+        }
+      } catch (e) {
+        erro ??= e;
+      }
+      if (erro !== undefined) throw traduzirErro(erro);
+    } else {
+      let g;
+      try {
+        g = await generateText(chamada);
+      } catch (e) {
+        throw traduzirErro(e);
+      }
+      if (g.text) aoTexto(g.text);
+      r = g;
+    }
+
+    // Chamada com entrada inválida (JSON quebrado) vem com o texto cru; o
+    // executor responde `entrada_invalida` e o modelo tenta de novo.
+    const chamadas: Chamada[] = r!.toolCalls.map((c) => ({ id: c.toolCallId, nome: c.toolName, entrada: c.input }));
+    return {
+      // Só o assistente: resultado de ferramenta quem monta é `resultado`.
+      mensagens: r!.responseMessages.filter((m) => m.role === "assistant"),
+      chamadas,
+      motivo: motivo(r!.finishReason, chamadas.length),
+      uso: uso(r!.usage),
+    };
+  }
 }
 
 /** Modelo da Featherless pelo id (`AGENTE_MODELO`). */

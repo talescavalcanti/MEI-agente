@@ -1,6 +1,7 @@
 import { APICallError, simulateReadableStream, type ModelMessage } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { FERRAMENTAS } from "@/lib/agente/ferramentas/definicoes";
 import { criarLlm, limitarHistorico, llmComModelo } from "@/lib/agente/llm";
 
@@ -253,6 +254,12 @@ describe("erros do provedor", () => {
   it("falha de rede vira mensagem em português", async () => {
     const p = llmComModelo(falha(new TypeError("fetch failed")), { streaming: true }).turno(req(), () => {});
     await expect(p).rejects.toThrow(/não consegui falar com o modelo/i);
+  });
+
+  it("falha fora da chamada ao provedor também sai em português", async () => {
+    const quebrada = { nome: "quebrada", descricao: "x", esquema: z.object({ d: z.date() }) };
+    const p = llmComModelo(modelo([fim("stop")])).turno({ ...req(), ferramentas: [quebrada] }, () => {});
+    await expect(p).rejects.toThrow(/não foi possível falar com o modelo/i);
   });
 
   it("outro erro do provedor também sai em português, com a causa preservada", async () => {
