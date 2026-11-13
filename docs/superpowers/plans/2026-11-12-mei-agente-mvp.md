@@ -16,6 +16,7 @@
 - **Toda escrita no banco passa por função SQL** (`db.rpc`). Nenhum `insert/update` direto em tabela de domínio a partir do TypeScript.
 - **Toda função SQL de domínio recebe `p_mei uuid` como 1º argumento e filtra por ele.** Id de outro MEI se comporta como id inexistente.
 - **Violação de regra = `raise exception 'regra: <frase em português para o usuário>'`.** O prefixo `regra:` é o contrato com a camada de ferramentas.
+- **Contrato do `Rpc`** (igual em teste e produção, definido na Task 2): função que devolve uma linha (`returns meis`) vira **objeto**; `setof`/`returns table` vira **lista**; `void` vira `null`; `numeric` vira `number`; erro é `Error` com a mensagem crua do Postgres (testar regra com `startsWith("regra:")`). O `Rpc` de produção (Task 11) lança `new Error(error.message)`.
 - **SQL idempotente** (`create table if not exists`, `create or replace function`), RLS ligado e **sem políticas**, como no `meu-chat`.
 - **Valores e datas de documento nunca vêm do texto do modelo**: orçamento e minuta são renderizados por template a partir do banco.
 - **Minuta de contrato sempre carrega o aviso** "Minuta gerada automaticamente. Revise antes de usar; não substitui orientação jurídica." (README §9).
@@ -189,7 +190,7 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
   - `item_decidir(p_mei, p_tipo text, p_id uuid, p_decisao text, p_user uuid) → jsonb {tipo, id, status, mudou bool}` — `p_tipo ∈ orcamento|contrato|mensagem`, `p_decisao ∈ aprovar|descartar`; só age em `rascunho`
   - `item_editar(p_mei, p_tipo, p_id, p_dados jsonb) → jsonb` — só em `rascunho`; mensagem: `{conteudo}`; contrato: `{minuta}`; orçamento: `{itens, validade_dias}` (revalida a soma)
   - `mensagem_marcar_enviada(p_mei, p_id) → mensagens` — exige `aprovado`; se `objetivo='envio_orcamento'`: `orcamentos.enviado_em = now()` e serviço `orcado → aguardando_resposta`; se tiver `tarefa_id`: tarefa `feita`
-  - `item_ver(p_mei, p_tipo, p_id) → jsonb` (o item + serviço + cliente + MEI, para cartão e impressão)
+  - `item_ver(p_mei, p_tipo, p_id) → jsonb` — `{ item, mei, cliente, servico, orcamento }`: o `item` mais os campos no formato `DadosDocumento` de `src/lib/documentos/tipos.ts` (para cartão e impressão)
 
 - [ ] **Step 1:** Testes:
   - `orcamento_gerar` em serviço sem valor → `regra: defina o valor do serviço antes do orçamento`.
@@ -221,14 +222,14 @@ A base (config, dependências, Vitest) já está em `developer`, então **T1 e T
 ### Task 7: Documentos em TypeScript puro
 
 **Files:**
-- Create: `src/lib/documentos/{formato,orcamento,contrato,divergencias}.ts`, `tests/documentos/*.test.ts`
+- Create: `src/lib/documentos/{tipos,formato,orcamento,contrato,divergencias}.ts`, `tests/documentos/*.test.ts`
 
 **Interfaces:**
-- Consumes: tipo `ItemCompleto` (retorno de `item_ver`) de `tipos.ts`.
+- Consumes: nada de outras tarefas. Os tipos de entrada moram em `src/lib/documentos/tipos.ts` (não em `dominio/tipos.ts`): `DadosDocumento = { mei: { nome; atividade; cidade; telefone; chave_pix }, cliente: { nome; whatsapp; endereco }, servico: { numero; descricao; valor; data_prevista; local; forma_pagamento }, orcamento?: { numero; valor; itens: { descricao: string; valor: number }[]; validade_dias } }`. Tipos dos campos: `numero`, `valor` e `validade_dias` são `number`, `data_prevista` é `string` ISO `AAAA-MM-DD`, o resto é `string`; todo campo pode ser `null`, menos `mei.nome` e `servico.descricao`. A Task 5 faz o `item_ver` devolver exatamente este formato.
 - Produces:
   - `moeda(valor: number): string` → `"R$ 800,00"`; `dataExtenso(iso: string): string` → `"sexta-feira, 20 de novembro de 2026"`; `telefone(digitos: string): string`
-  - `renderOrcamento(d: ItemCompleto): { titulo: string; linhas: { descricao: string; valor: string }[]; total: string; validade: string; pagamento: string }`
-  - `renderMinuta(d: DadosMinuta, clausulasExtras?: string[]): string` — texto com cláusulas fixas (objeto, preço e pagamento, prazo, obrigações, rescisão, foro = cidade do MEI), o aviso obrigatório no topo e `[A PREENCHER]` em todo dado ausente
+  - `renderOrcamento(d: DadosDocumento): { titulo: string; linhas: { descricao: string; valor: string }[]; total: string; validade: string; pagamento: string }`
+  - `renderMinuta(d: DadosDocumento, clausulasExtras?: string[]): string` — texto com cláusulas fixas (objeto, preço e pagamento, prazo, obrigações, rescisão, foro = cidade do MEI), o aviso obrigatório no topo e `[A PREENCHER]` em todo dado ausente
   - `valoresDivergentes(texto: string, valor: number): string[]` — valores em reais citados no texto que diferem de `valor`
 
 - [ ] **Step 1:** Testes: `moeda(800) === "R$ 800,00"`; `renderMinuta` sem endereço contém `[A PREENCHER]` e começa com o aviso; cláusula extra aparece numerada depois das fixas; **Review Focus 5:** `valoresDivergentes("Valor combinado: R$ 80", 800)` → `["R$ 80,00"]`; `valoresDivergentes("R$ 800,00 no Pix", 800)` e `("R$800", 800)` → `[]`; texto sem valor → `[]`.
