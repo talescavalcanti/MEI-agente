@@ -16,7 +16,11 @@ export default async function PainelLayout({ children }: { children: React.React
   /* Este `requireUser` serve para montar a navegação (nome) e para barrar
      quem chegou sem sessão na primeira carga. Ele NÃO é o guard das páginas:
      layout não re-renderiza a cada navegação de cliente, então cada página
-     refaz a checagem por conta própria. */
+     refaz a checagem por conta própria.
+     Aqui é `requireUser` e não `requireMei` de propósito: este layout também
+     envolve /painel/negocio, a tela para onde o `requireMei` manda quem ainda
+     não tem negócio. Exigir MEI aqui faria um laço de redirect. As páginas
+     (menos `negocio`) começam com `requireMei()`. */
   const me = await requireUser();
 
   return (

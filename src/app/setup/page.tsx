@@ -58,7 +58,7 @@ export default async function SetupPage() {
   return (
     <AuthShell
       title="Primeiro acesso"
-      subtitle="Nenhum usuário cadastrado ainda. Crie a conta de administrador."
+      subtitle="Crie a sua conta. No passo seguinte você cadastra o seu negócio."
     >
       <SetupForm />
     </AuthShell>
