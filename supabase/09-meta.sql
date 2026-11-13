@@ -59,7 +59,7 @@ alter table public.mensagens_recebidas enable row level security;
 create or replace function public.canal_conectar(p_mei uuid, p_canal text, p_conta text)
 returns public.canais_conectados
 language plpgsql
-set search_path = public
+set search_path = ''
 as $$
 declare
   v_conta text := btrim(coalesce(p_conta, ''));
@@ -99,7 +99,7 @@ $$;
 create or replace function public.mensagem_recebida_registrar(p_canal text, p_dados jsonb)
 returns uuid
 language plpgsql
-set search_path = public
+set search_path = ''
 as $$
 declare
   v_mei      uuid;
@@ -147,7 +147,7 @@ create or replace function public.mensagens_recebidas_listar(p_mei uuid, p_limit
 returns setof public.mensagens_recebidas
 language sql
 stable
-set search_path = public
+set search_path = ''
 as $$
   select r.* from public.mensagens_recebidas r
   where r.mei_id = p_mei
