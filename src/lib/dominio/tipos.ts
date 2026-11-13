@@ -290,3 +290,44 @@ export type ItemVisto = {
   servico: DadosDocumento["servico"] | null;
   orcamento: NonNullable<DadosDocumento["orcamento"]> | null;
 };
+
+export type TarefaTipo = "follow_up_orcamento";
+
+export type TarefaStatus = "aberta" | "feita" | "ignorada";
+
+/** Linha de `tarefas`. No máximo uma `aberta` por serviço e tipo. */
+export type Tarefa = {
+  id: string;
+  mei_id: string;
+  servico_id: string;
+  tipo: TarefaTipo;
+  /** Data (AAAA-MM-DD, America/Sao_Paulo) em que a tarefa venceu. */
+  vencimento: string;
+  status: TarefaStatus;
+  criado_em: string;
+};
+
+/**
+ * Linha de `propostas_pendentes`: serviço `aguardando_resposta` com orçamento
+ * enviado há `p_dias` ou mais. `tarefa_id` é a tarefa aberta, se houver.
+ */
+export type PropostaPendente = {
+  servico_id: string;
+  numero: number;
+  descricao: string;
+  valor: number | null;
+  cliente_id: string;
+  cliente_nome: string;
+  cliente_whatsapp: string | null;
+  enviado_em: string;
+  /** Dias desde o envio, contados pela data de hoje em America/Sao_Paulo. */
+  dias_parado: number;
+  tarefa_id: string | null;
+};
+
+/** Linha de `tarefas_gerar_followups`: só as tarefas criadas nesta rodada. */
+export type FollowupGerado = {
+  mei_id: string;
+  tarefa_id: string;
+  servico_id: string;
+};
