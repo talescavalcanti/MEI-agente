@@ -135,7 +135,7 @@ describe("executarFerramenta", () => {
 
   it("redigir_mensagem avisa valor diferente do serviço (Review Focus 5)", async () => {
     const { dados: c } = await ok("criar_ou_atualizar_cliente", { nome: "Ana" });
-    const { dados: s } = await ok("registrar_servico", { cliente_id: c.id, descricao: "Instalação", valor: 800 });
+    const { dados: s } = await ok("registrar_servico", { cliente_id: c.id, descricao: "Instalação", valor: 800, fechado: false });
     const { r, dados } = await ok("redigir_mensagem", {
       cliente_id: c.id,
       servico_id: s.id,
