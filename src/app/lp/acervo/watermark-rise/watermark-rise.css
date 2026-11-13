@@ -1,0 +1,11 @@
+.watermark {
+  display: flex; justify-content: space-between; width: 100%; overflow: hidden;
+  font-family: var(--c-font-sans); font-weight: 500; letter-spacing: -.06em;
+  font-size: var(--watermark-size, 15vw); line-height: .8;
+  color: var(--c-fg); opacity: var(--watermark-opacity, .1);
+  user-select: none;
+}
+.watermark span { display: inline-block; transform: translateY(110%); }
+.watermark.is-animated span { animation: slideInFromBottom 1.4s cubic-bezier(.16, 1, .3, 1) forwards; }
+@keyframes slideInFromBottom { from { transform: translateY(110%); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .watermark span { transform: none; } }

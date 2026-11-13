@@ -31,6 +31,16 @@ describe("proxy: páginas legais", () => {
   });
 });
 
+describe("proxy: landing page", () => {
+  it("/lp abre sem sessão", async () => {
+    expect(destino(await pedir("/lp"))).toBeNull();
+  });
+
+  it("/lp abre para quem está logado", async () => {
+    expect(destino(await pedir("/lp", true))).toBeNull();
+  });
+});
+
 describe("proxy: o resto continua igual", () => {
   it("painel sem sessão vai para o login guardando o destino", async () => {
     const res = await pedir("/painel");

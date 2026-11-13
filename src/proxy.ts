@@ -19,8 +19,11 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
 /** Rotas que existem justamente para quem não tem sessão. */
 const PUBLIC_PAGES = new Set(["/login", "/setup", "/cadastro"]);
 
-/** Rotas abertas para todo mundo, com ou sem sessão: as páginas legais que a Meta exige. */
-const OPEN_PAGES = new Set(["/privacidade", "/exclusao-de-dados"]);
+/**
+ * Rotas abertas para todo mundo, com ou sem sessão: as páginas legais que a
+ * Meta exige e a landing page.
+ */
+const OPEN_PAGES = new Set(["/privacidade", "/exclusao-de-dados", "/lp"]);
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
